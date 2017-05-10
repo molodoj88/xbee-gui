@@ -264,14 +264,6 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
         help.addAction(u'Список АТ-команд')
         exit = menubar.addMenu(u'Выход')
 
-    # Бесит)
-    #def closeEvent(self, event):
-        #reply = QtGui.QMessageBox.question(self, u'Внимание', u"Закрыть программу?", QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-        #if reply == QtGui.QMessageBox.Yes:
-        #    event.accept()
-        #else:
-        #    event.ignore()
-
     def hide_log(self, ss):
         if ss == 2:
             self.logWidget.widget.setVisible(False)
