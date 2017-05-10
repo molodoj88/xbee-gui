@@ -5,7 +5,16 @@ import datetime
 from XbeeConnect import XbeeConnect
 import logging
 import XbeeCommands
+from time import sleep
 
+module_type_dict = {'20': 'ZigBee Coordinator AT',
+                    '21': 'ZigBee Coordinator API',
+                    '22': 'ZigBee Router AT',
+                    '23': 'ZigBee Router API',
+                    '26': 'ZigBee Router/End Device, Analog I/O Adapter',
+                    '27': 'ZigBee Router/End Device, Digital I/O Adapter',
+                          '28': 'ZigBee End Device AT',
+                    '29': 'ZigBee End Device API'}
 commands = []
 commands_dict = {}
 for i in XbeeCommands.ALL_CLASSES:
@@ -48,6 +57,7 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
         self.coor = None
         self.connPrefs = []
         self.form = self
+        self.module_type = ''
 
     """ Все вкладки """
 
@@ -84,18 +94,17 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
         list_dev_layout.addWidget(end_device)
         self.parameter_connecting()
 
-        """        
-                #иконка
+        #иконка
 
-        self.conn_off_icon = QtGui.QPixmap('red_led.png')
-        self.conn_on_icon = QtGui.QPixmap('green_led.png')
+        self.conn_off_icon = QtGui.QPixmap('images/red_led.png')
+        self.conn_on_icon = QtGui.QPixmap('images/green_led.png')
         self.labelForIcon = QtGui.QLabel()
+        self.Icon_lbl = QtGui.QLabel(self.module_type)
+        st_connect_layout.addWidget(self.Icon_lbl)
         self.labelForIcon.setPixmap(self.conn_off_icon)
         st_connect_layout.addWidget(self.labelForIcon)
         status_connect.setLayout(st_connect_layout)
         #self.connected = True
-        
-        """
 
     """ Парамметры подключения, для 1-ой вкладки"""
     def parameter_connecting(self):
@@ -234,15 +243,6 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
         l1.setPixmap(QtGui.QPixmap("router.png"))
         tab3_layout.addWidget(l1)
 
-        #search_devices = QtGui.QPushButton(u"Сканирование сети")
-        #tab3_layout.addWidget(search_devices)
-        #self.search_list = QtGui.QStandardItemModel()
-        #self.search_view = QtGui.QTreeView()
-        #self.search_view.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
-        #self.search_view.setModel(self.search_list)
-        #self.search_list.setHorizontalHeaderLabels(['MY', 'SH', 'SL', 'ID', 'Type'])
-        #tab3_layout.addWidget(self.search_view)
-
         self.connect(self.connecting_btn, QtCore.SIGNAL("clicked()"), lambda fields=self.connPrefFiels: self.readPrefs(fields))
 
         self.tabWidget.currentChanged.connect(self.hide_log)
@@ -275,39 +275,19 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
         logging.debug(time + " New text string")
 
 #TODO В данной функции хотел сделать следующее: перехватит отправку сообщений в форму и выводить соответствующий индикатор:
-    """"
-    что-то вроде 
-    try:
-        sendDataToForm("Connection to port {} was successful")
-    except: 
-        self.labelForIcon.setPixmap(self.conn_on_icon)
-    else:
-        self.labelForIcon.setPixmap(self.conn_off_icon)
-    или как-то обращаться в консоль, наподобие:
-    if logging.log('could not open port'):
-        self.labelForIcon.setPixmap(self.conn_off_icon)
-    else:
-        self.labelForIcon.setPixmap(self.conn_on_icon)
-        
-    """
+
     #Функция индикации подключения
-    def connectionIndicate(self):
-        pass
+    def connectionIndicate(self, firmware):
+
+        #if module_type_dict['20'] == firmware:
+
+        #if firmware in module_type_dict.values():
+            #print module_type_dict[key]
+        self.Icon_lbl.setText(module_type_dict[str(firmware[:2])])
+        self.labelForIcon.setPixmap(self.conn_on_icon)
 
 #TODO в данной функции хотел реализовать построение структуры сети (3 вкладка)
-    """"
-    то есть отправляем команду ND считываем с него параметр DEVICE_TYPE в зависимости какое значение будет,
-    выводить иконки устройств
-    нажимаем на кнопку, например "сканировать" отправляется команда ND, ждем ответа и т.д, тут я понимаю как сделать,
-    далее также отправляем в форму сообщение с ответом на команду и как выше писал перехватываем его:
-    как-то так наверно через if else: 
-    if sendResponse(response['DEVICE_TYPE'=0]):
-        setPixmap(QtGui.QPixmap("coor.png"))
-    else if sendResponse(response['DEVICE_TYPE'=1]):
-        setPixmap(QtGui.QPixmap("router.png"))
-    else:
-        setPixmap(QtGui.QPixmap("end_device.png"))
-    """
+
     def structure_network(self):
         pass
 
@@ -326,6 +306,7 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
         self.connect(self.coor, QtCore.SIGNAL('SendData(QString)'), self.logMessage, QtCore.Qt.QueuedConnection)
         self.connect(self.coor, QtCore.SIGNAL('SendResponse(QString)'),
                      self.logMessage, QtCore.Qt.QueuedConnection)
+        self.connect(self.coor, QtCore.SIGNAL('ModuleConnected(QString)'), self.connectionIndicate, QtCore.Qt.QueuedConnection)
         self.coor.start()
 
     def send_btn_clicked(self):

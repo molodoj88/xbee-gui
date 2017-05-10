@@ -1,6 +1,7 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
 from xbee import XBee
+from xbee.zigbee import  ZigBee
 import XbeeCommands
 import serial
 import time
@@ -30,6 +31,7 @@ class XbeeConnect(QtCore.QThread):
         self.ser = None
         self.prefs = []
         self.logger = None
+        self.connected = False
 
     def sendDataToForm(self, data):
         self.emit(QtCore.SIGNAL('SendData(QString)'), data)
@@ -51,27 +53,38 @@ class XbeeConnect(QtCore.QThread):
             self.sendDataToForm(ex.message)
             return
         else:
+            self.connected = True
             self.sendDataToForm("Connection to port {} was successful".format(self.com))
-            xbee = XBee(self.ser)
+            self.xbee = ZigBee(self.ser)
             self.sendDataToForm("Send DH command to module...")
             print "Send DH command to module..."
             time.sleep(1)
-            xbee.send('at', frame_id='A', command='DH')
-            response = xbee.wait_read_frame()
-            self.sendDataToForm("Wait for response from module...")
-            print "Wait for response from module..."
-            self.sleep(1)
-            self.sendResponse(response['parameter'].encode("hex"))
-            print response['parameter'].encode("hex")
+            self.xbee.send('at', frame_id='A', command='VR')
+            response = self.xbee.wait_read_frame()
+            self.moduleConnected(response['parameter'].encode("hex"))
+            #self.xbee = XBee(self.ser, callback=self.on_nd_command_cb)
 
     def sendCommand(self, command, frame_id):
-        xbee = XBee(self.ser)
-        xbee.send('at', frame_id=frame_id, command=str(command))
-        response = xbee.wait_read_frame()
-        self.sendResponse(response['parameter'].encode("hex"))
+        if str(command) == 'ND':
+            self.xbee.send('at', frame_id=frame_id, command=str(command))
+            response = self.xbee.wait_read_frame()
+            response_list = ['source_addr', 'device_type', 'source_addr_long']
+            for k in response_list:
+                print response["parameter"][k].encode("hex")
+                self.sendResponse(response["parameter"][k].encode("hex"))
+        else:
+            self.xbee.send('at', frame_id=frame_id, command=str(command))
+            response = self.xbee.wait_read_frame()
+            self.sendResponse(response['parameter'].encode("hex"))
+
+    def on_nd_command_cb(self, data):
+        self.sendDataToForm(data)
 
     def sendResponse(self, response):
         self.emit(QtCore.SIGNAL('SendResponse(QString)'), response)
+
+    def moduleConnected(self, response):
+        self.emit(QtCore.SIGNAL('ModuleConnected(QString)'), response)
 
 
 class LVL():
