@@ -237,11 +237,28 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
     """ Структуа сети, все подключенные устройства """
 
     def tab_network_structure(self):
-        tab3_layout = QtGui.QHBoxLayout(self.tab3)
-        #Тестовый вариант вывода изображений под каждый тип устройства
-        l1 = QtGui.QLabel()
-        l1.setPixmap(QtGui.QPixmap("router.png"))
-        tab3_layout.addWidget(l1)
+        #tab3_layout = QtGui.QHBoxLayout(self.tab3)
+
+        self.scene = QtGui.QGraphicsScene(parent=self.tab3)
+
+        self.scene_view = QtGui.QGraphicsView(self.scene)
+
+        self.scene_view_widget = QtGui.QHBoxLayout(self.tab3)
+        self.scene_view_widget.addWidget(self.scene_view)
+
+        self.coor = QtGui.QPixmap('images/zc.png')
+        self.coor_item = QtGui.QGraphicsPixmapItem(self.coor, scene=self.scene)
+        self.coor_item.setOffset(400, 300)
+
+        self.end_dev = QtGui.QPixmap('images/ze.png')
+        self.end_item = QtGui.QGraphicsPixmapItem(self.end_dev, scene=self.scene)
+        self.end_item.setOffset(300, 500)
+
+        self.router = QtGui.QPixmap('images/zr.png')
+        self.router_item = QtGui.QGraphicsPixmapItem(self.router, scene=self.scene)
+        self.router_item.setOffset(500, 100)
+
+
 
         self.connect(self.connecting_btn, QtCore.SIGNAL("clicked()"), lambda fields=self.connPrefFiels: self.readPrefs(fields))
 
@@ -279,17 +296,15 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
     #Функция индикации подключения
     def connectionIndicate(self, firmware):
 
-        #if module_type_dict['20'] == firmware:
 
-        #if firmware in module_type_dict.values():
-            #print module_type_dict[key]
         self.Icon_lbl.setText(module_type_dict[str(firmware[:2])])
+
         self.labelForIcon.setPixmap(self.conn_on_icon)
 
 #TODO в данной функции хотел реализовать построение структуры сети (3 вкладка)
 
     def structure_network(self):
-        pass
+       pass
 
     #функция считавания значений для подключения модуля
     def readPrefs(self, fields):

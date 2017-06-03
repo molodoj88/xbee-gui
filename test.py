@@ -18,12 +18,18 @@ class Window(QtGui.QWidget):
         self.view_widget = QtGui.QHBoxLayout(self.main_widget)
         self.view_widget.addWidget(self.view)
 
-        rect1 = QtGui.QGraphicsRectItem(20, 20, 100, 100, scene=self.scene)
-        rect2 = QtGui.QGraphicsRectItem(30, 30, 100, 100, scene=self.scene)
+        #rect1 = QtGui.QGraphicsRectItem(20, 20, 100, 100, scene=self.scene)
+        #rect2 = QtGui.QGraphicsRectItem(30, 30, 100, 100, scene=self.scene)
 
-        self.coord_pixmap = QtGui.QPixmap('images/icon.png')
+
+        self.coord_pixmap = QtGui.QPixmap('images/zc.png')
+
         self.coord_item = QtGui.QGraphicsPixmapItem(self.coord_pixmap, scene=self.scene)
-        self.coord_item.setOffset(50, 50)
+        self.coord_item.setOffset(50, 150)
+
+        self.router_pixmap = QtGui.QPixmap('images/zr.png')
+        self.router_item = QtGui.QGraphicsPixmapItem(self.router_pixmap, scene=self.scene)
+        self.router_item.setOffset(100, 50)
 
 def main():
     app = QtGui.QApplication(sys.argv)

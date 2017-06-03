@@ -57,7 +57,7 @@ class XbeeConnect(QtCore.QThread):
             self.sendDataToForm("Connection to port {} was successful".format(self.com))
             self.xbee = ZigBee(self.ser)
             self.sendDataToForm("Send DH command to module...")
-            print "Send DH command to module..."
+            #print "Send DH command to module..."
             time.sleep(1)
             self.xbee.send('at', frame_id='A', command='VR')
             response = self.xbee.wait_read_frame()
@@ -68,10 +68,18 @@ class XbeeConnect(QtCore.QThread):
         if str(command) == 'ND':
             self.xbee.send('at', frame_id=frame_id, command=str(command))
             response = self.xbee.wait_read_frame()
+            print response
             response_list = ['source_addr', 'device_type', 'source_addr_long']
             for k in response_list:
                 print response["parameter"][k].encode("hex")
+
                 self.sendResponse(response["parameter"][k].encode("hex"))
+
+                #print response["parameter"]['device_type'].encode("hex")
+                #test сравнения с готовым значением с тем который пришел от модуля, вывода значения отдельного параметра
+                if response['parameter']['device_type': 02]:
+                    print 'end_device'
+
         else:
             self.xbee.send('at', frame_id=frame_id, command=str(command))
             response = self.xbee.wait_read_frame()
