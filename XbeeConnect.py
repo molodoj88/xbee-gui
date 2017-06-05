@@ -75,10 +75,10 @@ class XbeeConnect(QtCore.QThread):
 
                 self.sendResponse(response["parameter"][k].encode("hex"))
 
-                #print response["parameter"]['device_type'].encode("hex")
-                #test сравнения с готовым значением с тем который пришел от модуля, вывода значения отдельного параметра
-                if response['parameter']['device_type': 02]:
-                    print 'end_device'
+                #if response["parameter"]['device_type'].encode("hex") == '02':
+                    #print 'vse ok'
+                #else:
+                    #print 'net'
 
         else:
             self.xbee.send('at', frame_id=frame_id, command=str(command))
