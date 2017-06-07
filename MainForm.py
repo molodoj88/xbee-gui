@@ -246,22 +246,6 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
         self.scene_view_widget = QtGui.QHBoxLayout(self.tab3)
         self.scene_view_widget.addWidget(self.scene_view)
 
-
-
-        #self.coor = QtGui.QPixmap('images/zc.png')
-        #self.coor_item = QtGui.QGraphicsPixmapItem(self.coor, scene=self.scene)
-        #self.coor_item.setOffset(400, 300)
-
-        #self.end_dev = QtGui.QPixmap('images/ze.png')
-        #self.end_item = QtGui.QGraphicsPixmapItem(self.end_dev, scene=self.scene)
-        #self.end_item.setOffset(300, 500)
-
-        #self.router = QtGui.QPixmap('images/zr.png')
-        #self.router_item = QtGui.QGraphicsPixmapItem(self.router, scene=self.scene)
-        #self.router_item.setOffset(500, 100)
-
-
-
         self.connect(self.connecting_btn, QtCore.SIGNAL("clicked()"), lambda fields=self.connPrefFiels: self.readPrefs(fields))
 
         self.tabWidget.currentChanged.connect(self.hide_log)
@@ -301,13 +285,13 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
 
         self.Icon_lbl.setText(module_type_dict[str(firmware[:2])])
 
-        print (module_type_dict[str(firmware[:2])])
+        firm_id = str(firmware[:2])
 
-        if module_type_dict[str(firmware[:2])] == 'ZigBee Coordinator API':
-            self.coor = QtGui.QPixmap('images/zc.png')
-            self.coor_item = QtGui.QGraphicsPixmapItem(self.coor, scene=self.scene)
+        if firm_id == '21':
+            self.coord = QtGui.QPixmap('images/zc.png')
+            self.coor_item = QtGui.QGraphicsPixmapItem(self.coord, scene=self.scene)
             self.coor_item.setOffset(400, 300)
-        elif module_type_dict[str(firmware[:2])] == 'ZigBee End Device API':
+        elif firm_id == '29':
             self.end_dev = QtGui.QPixmap('images/ze.png')
             self.end_item = QtGui.QGraphicsPixmapItem(self.end_dev, scene=self.scene)
             self.end_item.setOffset(300, 500)

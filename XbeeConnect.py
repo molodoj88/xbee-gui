@@ -70,15 +70,16 @@ class XbeeConnect(QtCore.QThread):
             response = self.xbee.wait_read_frame()
             print response
             response_list = ['source_addr', 'device_type', 'source_addr_long']
+
+            #определение тип удаленных устройств(тест)
+            if response['parameter']['device_type'].encode('hex') == '02':
+                print u'оконечное устройство'
+            else:
+                print 'other'
+
             for k in response_list:
-                print response["parameter"][k].encode("hex")
 
                 self.sendResponse(response["parameter"][k].encode("hex"))
-
-                #if response["parameter"]['device_type'].encode("hex") == '02':
-                    #print 'vse ok'
-                #else:
-                    #print 'net'
 
         else:
             self.xbee.send('at', frame_id=frame_id, command=str(command))
