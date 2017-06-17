@@ -74,6 +74,7 @@ class XbeeConnect(QtCore.QThread):
             #определение тип удаленных устройств(тест)
             if response['parameter']['device_type'].encode('hex') == '02':
                 print u'оконечное устройство'
+                self.sendDataToForm(u"Оконечное устройство подключено")
             else:
                 print 'other'
 

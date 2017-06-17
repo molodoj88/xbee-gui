@@ -5,8 +5,13 @@ import datetime
 from XbeeConnect import XbeeConnect
 import logging
 import XbeeCommands
+import random
 from time import sleep
 
+
+x = random.randrange(0, 800)
+y = random.randrange(0, 600)
+print (x, y)
 module_type_dict = {'20': 'ZigBee Coordinator AT',
                     '21': 'ZigBee Coordinator API',
                     '22': 'ZigBee Router AT',
@@ -185,9 +190,9 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
         comm_parameter_edit = QtGui.QLineEdit()
         comm_parameter_edit.setFixedWidth(80)
         send_commands_layout.addWidget(comm_parameter_edit, 3, 1)
-        send_command_btn = QtGui.QPushButton(u'Отправить')
-        send_commands_layout.addWidget(send_command_btn, 4, 0)
-        send_command_btn.clicked.connect(self.send_btn_clicked)
+        self.send_command_btn = QtGui.QPushButton(u'Отправить')
+        send_commands_layout.addWidget(self.send_command_btn, 4, 0)
+        self.send_command_btn.clicked.connect(self.send_btn_clicked)
 
     """ Список доступных команд """
 
@@ -248,7 +253,21 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
 
         self.connect(self.connecting_btn, QtCore.SIGNAL("clicked()"), lambda fields=self.connPrefFiels: self.readPrefs(fields))
 
+
+#TODO в функции sendCommand (XbeeConnect) есть тестовое определение типа устройства с помощью отправки ND, что хотел сделать: обратиться к данное функции и прочитать ответ и
+#TODO вывести иконку, но сама функция выполняется в другом потоке
+        self.thread_xbee = XbeeConnect(QtCore.QThread)
+
+
+        self.connect(self.thread_xbee, QtCore.SIGNAL('SendResponse(QString)'), self.connectionIndicate, QtCore.Qt.QueuedConnection)
+
+        #self.emit(QtCore.SIGNAL('SendResponse(QString)'), self.connectionIndicate, QtCore.Qt.QueuedConnection)
+
+
+
+
         self.tabWidget.currentChanged.connect(self.hide_log)
+
 
     """ Верхнее меню управления """
 
@@ -282,7 +301,6 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
     #Функция индикации подключения
     def connectionIndicate(self, firmware):
 
-
         self.Icon_lbl.setText(module_type_dict[str(firmware[:2])])
 
         firm_id = str(firmware[:2])
@@ -290,11 +308,11 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
         if firm_id == '21':
             self.coord = QtGui.QPixmap('images/zc.png')
             self.coor_item = QtGui.QGraphicsPixmapItem(self.coord, scene=self.scene)
-            self.coor_item.setOffset(400, 300)
+            self.coor_item.setOffset(100, 300)
         elif firm_id == '29':
             self.end_dev = QtGui.QPixmap('images/ze.png')
             self.end_item = QtGui.QGraphicsPixmapItem(self.end_dev, scene=self.scene)
-            self.end_item.setOffset(300, 500)
+            self.end_item.setOffset(x, y)
         else:
             self.router = QtGui.QPixmap('images/zr.png')
             self.router_item = QtGui.QGraphicsPixmapItem(self.router, scene=self.scene)
@@ -303,7 +321,6 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
 
         self.labelForIcon.setPixmap(self.conn_on_icon)
 
-#TODO в данной функции хотел реализовать построение структуры сети (3 вкладка)
 
     def structure_network(self):
        pass
