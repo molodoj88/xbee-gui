@@ -18,7 +18,7 @@ module_type_dict = {'20': 'ZigBee Coordinator AT',
                     '23': 'ZigBee Router API',
                     '26': 'ZigBee Router/End Device, Analog I/O Adapter',
                     '27': 'ZigBee Router/End Device, Digital I/O Adapter',
-                          '28': 'ZigBee End Device AT',
+                    '28': 'ZigBee End Device AT',
                     '29': 'ZigBee End Device API'}
 commands = []
 commands_dict = {}
@@ -242,37 +242,17 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
     """ Структуа сети, все подключенные устройства """
 
     def tab_network_structure(self):
-        #tab3_layout = QtGui.QHBoxLayout(self.tab3)
 
         self.scene = QtGui.QGraphicsScene(parent=self.tab3)
-
         self.scene_view = QtGui.QGraphicsView(self.scene)
-
         self.scene_view_widget = QtGui.QHBoxLayout(self.tab3)
         self.scene_view_widget.addWidget(self.scene_view)
-
         self.connect(self.connecting_btn, QtCore.SIGNAL("clicked()"), lambda fields=self.connPrefFiels: self.readPrefs(fields))
-
-
-#TODO в функции sendCommand (XbeeConnect) есть тестовое определение типа устройства с помощью отправки ND, что хотел сделать: обратиться к данное функции и прочитать ответ и
-#TODO вывести иконку, но сама функция выполняется в другом потоке
-        self.thread_xbee = XbeeConnect(QtCore.QThread)
-
-
-        self.connect(self.thread_xbee, QtCore.SIGNAL('SendResponse(QString)'), self.connectionIndicate, QtCore.Qt.QueuedConnection)
-
-        #self.emit(QtCore.SIGNAL('SendResponse(QString)'), self.connectionIndicate, QtCore.Qt.QueuedConnection)
-
-
-
-
         self.tabWidget.currentChanged.connect(self.hide_log)
-
 
     """ Верхнее меню управления """
 
     def status_bar(self):
-        #self.statusBar()
         menubar = self.menuBar()
         file = menubar.addMenu(u'Файл')
         file.addAction(u'Открыть соединение')
@@ -334,7 +314,7 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
 
         # отправляем в поток параметры подключения
         # стартуем
-        self.coor = XbeeConnect(self.form)
+        self.coor = XbeeConnect()
         self.coor.com = str("COM" + self.connPrefs[0])
         self.coor.speed = int(self.connPrefs[1])
         self.connect(self.coor, QtCore.SIGNAL('SendData(QString)'), self.logMessage, QtCore.Qt.QueuedConnection)

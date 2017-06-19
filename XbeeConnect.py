@@ -6,6 +6,7 @@ import XbeeCommands
 import serial
 import time
 from PyQt4 import QtCore
+import json
 import logging
 
 """
@@ -24,7 +25,7 @@ for i in XbeeCommands.ALL_CLASSES:
 commands_dict = dict(zip(commands_short, commands))
 
 class XbeeConnect(QtCore.QThread):
-    def __init__(self, form):
+    def __init__(self):
         QtCore.QThread.__init__(self)
         self.com = ''
         self.speed = ''
@@ -68,20 +69,10 @@ class XbeeConnect(QtCore.QThread):
         if str(command) == 'ND':
             self.xbee.send('at', frame_id=frame_id, command=str(command))
             response = self.xbee.wait_read_frame()
-            print response
             response_list = ['source_addr', 'device_type', 'source_addr_long']
-
-            #определение тип удаленных устройств(тест)
-            if response['parameter']['device_type'].encode('hex') == '02':
-                print u'оконечное устройство'
-                self.sendDataToForm(u"Оконечное устройство подключено")
-            else:
-                print 'other'
-
-            for k in response_list:
-
-                self.sendResponse(response["parameter"][k].encode("hex"))
-
+            nd_response_dict = {key: response["parameter"][key].encode("hex") for key in response_list}
+            nd_response_json = json.dumps(nd_response_dict)
+            self.sendNDResponse(nd_response_json)
         else:
             self.xbee.send('at', frame_id=frame_id, command=str(command))
             response = self.xbee.wait_read_frame()
@@ -92,6 +83,9 @@ class XbeeConnect(QtCore.QThread):
 
     def sendResponse(self, response):
         self.emit(QtCore.SIGNAL('SendResponse(QString)'), response)
+
+    def sendNDResponse(self, response):
+        self.emit(QtCore.SIGNAL('SendNDResponse(QString)'), response)
 
     def moduleConnected(self, response):
         self.emit(QtCore.SIGNAL('ModuleConnected(QString)'), response)
