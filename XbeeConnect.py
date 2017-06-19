@@ -56,30 +56,31 @@ class XbeeConnect(QtCore.QThread):
         else:
             self.connected = True
             self.sendDataToForm("Connection to port {} was successful".format(self.com))
-            self.xbee = ZigBee(self.ser)
-            self.sendDataToForm("Send DH command to module...")
-            #print "Send DH command to module..."
+            self.xbee = ZigBee(self.ser, callback=self.on_command_cb)
+            self.sendDataToForm("Send VR command to module...")
             time.sleep(1)
             self.xbee.send('at', frame_id='A', command='VR')
-            response = self.xbee.wait_read_frame()
-            self.moduleConnected(response['parameter'].encode("hex"))
-            #self.xbee = XBee(self.ser, callback=self.on_nd_command_cb)
 
     def sendCommand(self, command, frame_id):
-        if str(command) == 'ND':
-            self.xbee.send('at', frame_id=frame_id, command=str(command))
-            response = self.xbee.wait_read_frame()
+        self.xbee.send('at', frame_id=frame_id, command=str(command))
+
+    def sendNDCommand(self):
+        self.xbee.send('at', frame_id='A', command='ND')
+
+    def on_command_cb(self, data):
+        command = data["command"]
+        if command == "VR":
+            self.moduleConnected(data['parameter'].encode("hex"))
+        elif command == "ND":
             response_list = ['source_addr', 'device_type', 'source_addr_long']
-            nd_response_dict = {key: response["parameter"][key].encode("hex") for key in response_list}
+            nd_response_dict = {key: data["parameter"][key].encode("hex") for key in response_list}
             nd_response_json = json.dumps(nd_response_dict)
             self.sendNDResponse(nd_response_json)
+        elif command == "CH":
+            self.operatingChannelInfo(data["parameter"].encode("hex"))
         else:
-            self.xbee.send('at', frame_id=frame_id, command=str(command))
-            response = self.xbee.wait_read_frame()
-            self.sendResponse(response['parameter'].encode("hex"))
-
-    def on_nd_command_cb(self, data):
-        self.sendDataToForm(data)
+            print data
+            self.sendResponse(json.dumps(data))
 
     def sendResponse(self, response):
         self.emit(QtCore.SIGNAL('SendResponse(QString)'), response)
@@ -89,6 +90,9 @@ class XbeeConnect(QtCore.QThread):
 
     def moduleConnected(self, response):
         self.emit(QtCore.SIGNAL('ModuleConnected(QString)'), response)
+
+    def operatingChannelInfo(self, response):
+        self.emit(QtCore.SIGNAL('SendOperatingChannel(QString)'), response)
 
 
 class LVL():

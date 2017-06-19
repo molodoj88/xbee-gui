@@ -6,12 +6,9 @@ from XbeeConnect import XbeeConnect
 import logging
 import XbeeCommands
 import random
+import json
 from time import sleep
 
-
-x = random.randrange(0, 800)
-y = random.randrange(0, 600)
-print (x, y)
 module_type_dict = {'20': 'ZigBee Coordinator AT',
                     '21': 'ZigBee Coordinator API',
                     '22': 'ZigBee Router AT',
@@ -89,7 +86,7 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
         list_devices = QtGui.QGroupBox(u'ZigBee устройства')
         description_layout.addWidget(status_connect)
         description_layout.addWidget(list_devices, QtCore.Qt.AlignCenter)
-        st_connect_layout = QtGui.QHBoxLayout()
+        self.st_connect_layout = QtGui.QHBoxLayout()
         list_dev_layout = QtGui.QHBoxLayout(list_devices)
         coor = QtGui.QGroupBox(u'Кооридантор')
         router = QtGui.QGroupBox(u'Роутер')
@@ -105,10 +102,10 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
         self.conn_on_icon = QtGui.QPixmap('images/green_led.png')
         self.labelForIcon = QtGui.QLabel()
         self.Icon_lbl = QtGui.QLabel(self.module_type)
-        st_connect_layout.addWidget(self.Icon_lbl)
+        self.st_connect_layout.addWidget(self.Icon_lbl)
         self.labelForIcon.setPixmap(self.conn_off_icon)
-        st_connect_layout.addWidget(self.labelForIcon)
-        status_connect.setLayout(st_connect_layout)
+        self.st_connect_layout.addWidget(self.labelForIcon)
+        status_connect.setLayout(self.st_connect_layout)
         #self.connected = True
 
     """ Парамметры подключения, для 1-ой вкладки"""
@@ -239,20 +236,22 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
         self.centralWidgetLayout.addWidget(self.logWidget.widget)
         logging.debug("Logger initialized")
 
-    """ Структуа сети, все подключенные устройства """
-
     def tab_network_structure(self):
+        """Функция для инициализации третьей вкладки (структура сети)"""
 
+        self.update_network_btn = QtGui.QPushButton(u"Обновить")
         self.scene = QtGui.QGraphicsScene(parent=self.tab3)
         self.scene_view = QtGui.QGraphicsView(self.scene)
-        self.scene_view_widget = QtGui.QHBoxLayout(self.tab3)
+        self.scene_view_widget = QtGui.QVBoxLayout(self.tab3)
+        self.scene_view_widget.addWidget(self.update_network_btn)
         self.scene_view_widget.addWidget(self.scene_view)
         self.connect(self.connecting_btn, QtCore.SIGNAL("clicked()"), lambda fields=self.connPrefFiels: self.readPrefs(fields))
+        self.update_network_btn.clicked.connect(self.on_update_network_btn_clicked)
         self.tabWidget.currentChanged.connect(self.hide_log)
 
-    """ Верхнее меню управления """
-
     def status_bar(self):
+        """ Верхнее меню управления """
+
         menubar = self.menuBar()
         file = menubar.addMenu(u'Файл')
         file.addAction(u'Открыть соединение')
@@ -289,15 +288,6 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
             self.coord = QtGui.QPixmap('images/zc.png')
             self.coor_item = QtGui.QGraphicsPixmapItem(self.coord, scene=self.scene)
             self.coor_item.setOffset(100, 300)
-        elif firm_id == '29':
-            self.end_dev = QtGui.QPixmap('images/ze.png')
-            self.end_item = QtGui.QGraphicsPixmapItem(self.end_dev, scene=self.scene)
-            self.end_item.setOffset(x, y)
-        else:
-            self.router = QtGui.QPixmap('images/zr.png')
-            self.router_item = QtGui.QGraphicsPixmapItem(self.router, scene=self.scene)
-            self.router_item.setOffset(500, 100)
-
 
         self.labelForIcon.setPixmap(self.conn_on_icon)
 
@@ -320,13 +310,42 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
         self.connect(self.coor, QtCore.SIGNAL('SendData(QString)'), self.logMessage, QtCore.Qt.QueuedConnection)
         self.connect(self.coor, QtCore.SIGNAL('SendResponse(QString)'),
                      self.logMessage, QtCore.Qt.QueuedConnection)
-        self.connect(self.coor, QtCore.SIGNAL('ModuleConnected(QString)'), self.connectionIndicate, QtCore.Qt.QueuedConnection)
+        self.connect(self.coor, QtCore.SIGNAL('SendNDResponse(QString)'),
+                     self.update_network_structure, QtCore.Qt.QueuedConnection)
+        self.connect(self.coor, QtCore.SIGNAL('ModuleConnected(QString)'),
+                     self.connectionIndicate, QtCore.Qt.QueuedConnection)
+        self.connect(self.coor, QtCore.SIGNAL('SendOperatingChannel(QString)'),
+                     self.operating_channel_indicate, QtCore.Qt.QueuedConnection)
         self.coor.start()
 
     def send_btn_clicked(self):
         _command = self.comm_edit.text()
         self.logMessage(_command)
         self.coor.sendCommand(_command, 'A')
+
+    def on_update_network_btn_clicked(self):
+        self.coor.sendNDCommand()
+
+    def operating_channel_indicate(self, channel):
+        operating_channel_name_lbl = QtGui.QLabel(u"Канал: ")
+        operating_channel_lbl = QtGui.QLabel()
+        self.st_connect_layout.addWidget(operating_channel_name_lbl)
+        self.st_connect_layout.addWidget(operating_channel_lbl)
+        operating_channel_lbl.setText(channel)
+
+    def update_network_structure(self, response):
+        response_dict = json.loads(str(response))
+        if response_dict["device_type"] == "01":
+            self.router = QtGui.QPixmap('images/zr.png')
+            self.router_item = QtGui.QGraphicsPixmapItem(self.router, scene=self.scene)
+            self.router_item.setOffset(500, 100)
+        if response_dict["device_type"] == "02":
+            x = random.randrange(50, 800)
+            y = random.randrange(50, 600)
+            self.end_dev = QtGui.QPixmap('images/ze.png')
+            self.end_item = QtGui.QGraphicsPixmapItem(self.end_dev, scene=self.scene)
+            self.end_item.setOffset(x, y)
+
 
     def logMessage(self, text):
         logging.debug(text)
