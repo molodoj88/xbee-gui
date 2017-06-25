@@ -25,9 +25,34 @@ for i in XbeeCommands.ALL_CLASSES:
         commands_dict[command] = i.__dict__.get(command)
 
 
-#Главное окно
-class Block(QtGui.QMainWindow, QtGui.QTreeView):
+class ModalWind(QtGui.QWidget):
     def __init__(self, parent=None):
+        super(ModalWind, self).__init__(parent)
+        self.setWindowFlags(QtCore.Qt.Dialog | QtCore.Qt.WindowSystemMenuHint)
+        self.setWindowModality(QtCore.Qt.WindowModal)
+        self.setWindowTitle(u'модальное окно')
+        self.resize(300, 400)
+        btn_test = QtGui.QPushButton(u'настройки')
+        vbox = QtGui.QVBoxLayout()
+        vbox.addWidget(btn_test)
+        self.setLayout(vbox)
+"""
+class GraphicsItem(QtGui.QGraphicsPixmapItem):
+    def __init__(self, *args, **kwargs):
+        QtGui.QGraphicsPixmapItem.__init__(self, *args, **kwargs)
+
+    def contextMenuEvent(self, event):
+        self.mod = mainWindow()
+        menu = QtGui.QMenu()
+        settings_action = menu.addAction(u"Настройки")
+        action = menu.exec_(event.screenPos())
+        if action == settings_action:
+            self.mod.on_show()
+"""
+    #Главное окно
+class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
+    def __init__(self, parent=None):
+        super(mainWindow, self).__init__(parent)
         QtGui.QWidget.__init__(self, parent)
         self.centralWidget = QtGui.QWidget()
         self.input_data()
@@ -53,9 +78,11 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
         self.status_bar()
         self.all_tab()
 
-    """ Входные данные """
+
+
 
     def input_data(self):
+        """ Входные данные """
         self.coor = None
         self.connPrefs = []
         self.form = self
@@ -346,9 +373,25 @@ class Block(QtGui.QMainWindow, QtGui.QTreeView):
             self.end_item = QtGui.QGraphicsPixmapItem(self.end_dev, scene=self.scene)
             self.end_item.setOffset(x, y)
 
-
     def logMessage(self, text):
         logging.debug(text)
+
+
+
+
+
+    def contextMenuEvent(self, event):
+        menu = QtGui.QMenu()
+        settings_action = menu.addAction(u"Настройки")
+        action = menu.exec_(event.globalPos())
+        if action == settings_action:
+            self.on_show()
+
+    def on_show(self):
+        win = ModalWind(self)
+        win.show()
+
+
 
 class QTextEditLogger(logging.Handler):
     """
@@ -366,7 +409,7 @@ class QTextEditLogger(logging.Handler):
 
 def main():
     app = QtGui.QApplication(sys.argv)
-    bl = Block()
+    bl = mainWindow()
     bl.show()
     sys.exit(app.exec_())
 
