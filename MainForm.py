@@ -206,6 +206,8 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         send_commands_layout.addWidget(type_commands_lbl, 1, 0)
         list_type_commands = QtGui.QComboBox()
         list_type_commands.setFixedWidth(80)
+#TODO нужно считать выбранный тип команды и записать в виде строки в переменную, чтоб с этого же окна отправлять remote_at команды
+#TODO как я понимаю в ините в XbeeConnect указать переменную например self.type_remote_command='', функция примерно примет вид, в зависимости что выберем в главной форме в переменную запишется либо 'at' либо 'remote_at', sendCommand self.xbee.send(self.type_remote_command, frame_id=frame_id, command=str(command))
         list_type_commands.addItems(["at", "remote_at"])
         send_commands_layout.addWidget(list_type_commands, 1, 1)
         command_lbl = QtGui.QLabel(u'Команда')
