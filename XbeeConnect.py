@@ -1,7 +1,7 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
 from xbee import XBee
-from xbee.zigbee import  ZigBee
+from xbee.zigbee import ZigBee
 import XbeeCommands
 import serial
 import time
@@ -81,6 +81,19 @@ class XbeeConnect(QtCore.QThread):
         else:
             print data
             self.sendResponse(json.dumps(data))
+
+    # def sendCommandRemote(self, command, frame_id):
+    #     self.xbee.send('remote', frame_id=frame_id, command=str(command))
+
+    #тест отправки remote_at комаанды
+    def sendIDRemoteCommmand(self):
+        self.xbee.send('remote_at', frame_id='A', command='ID')
+
+
+    def sendIDRemoteResponse(self, response):
+        self.emit(QtCore.SIGNAL('SendIDRemoteResponse(QString)'), response)
+        print response
+
 
     def sendResponse(self, response):
         self.emit(QtCore.SIGNAL('SendResponse(QString)'), response)

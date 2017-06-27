@@ -193,7 +193,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         send_commands_layout.addWidget(type_commands_lbl, 1, 0)
         list_type_commands = QtGui.QComboBox()
         list_type_commands.setFixedWidth(80)
-        list_type_commands.addItems(["AT", "Remote AT"])
+        list_type_commands.addItems(["at", "remote_at"])
         send_commands_layout.addWidget(list_type_commands, 1, 1)
         command_lbl = QtGui.QLabel(u'Команда')
         send_commands_layout.addWidget(command_lbl, 2, 0)
@@ -274,6 +274,9 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.scene_view_widget.addWidget(self.scene_view)
         self.connect(self.connecting_btn, QtCore.SIGNAL("clicked()"), lambda fields=self.connPrefFiels: self.readPrefs(fields))
         self.update_network_btn.clicked.connect(self.on_update_network_btn_clicked)
+        self.test_btn_send_remote_comm = QtGui.QPushButton(u'отправить remote ID')
+        self.scene_view_widget.addWidget(self.test_btn_send_remote_comm)
+        self.connect(self.test_btn_send_remote_comm, QtCore.SIGNAL("clicked()"), self.id_send_remote_command)
         self.tabWidget.currentChanged.connect(self.hide_log)
 
     def status_bar(self):
@@ -352,6 +355,9 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
 
     def on_update_network_btn_clicked(self):
         self.coor.sendNDCommand()
+
+    def id_send_remote_command(self):
+        self.coor.sendIDRemoteCommmand()
 
     def operating_channel_indicate(self, channel):
         operating_channel_name_lbl = QtGui.QLabel(u"Канал: ")
