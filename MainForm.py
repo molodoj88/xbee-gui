@@ -30,12 +30,23 @@ class ModalWind(QtGui.QWidget):
         super(ModalWind, self).__init__(parent)
         self.setWindowFlags(QtCore.Qt.Dialog | QtCore.Qt.WindowSystemMenuHint)
         self.setWindowModality(QtCore.Qt.WindowModal)
-        self.setWindowTitle(u'модальное окно')
-        self.resize(300, 400)
-        btn_test = QtGui.QPushButton(u'настройки')
-        vbox = QtGui.QVBoxLayout()
-        vbox.addWidget(btn_test)
-        self.setLayout(vbox)
+        self.setWindowTitle(u'Управление удаленным устройством')
+        self.resize(250, 200)
+
+        send_remote_command_btn = QtGui.QPushButton(u'Отправить')
+        modal_grid = QtGui.QGridLayout()
+        modal_grid.addWidget(send_remote_command_btn, 3, 0)
+        remote_command_lbl = QtGui.QLabel(u'Команда')
+        remote_command_edit = QtGui.QLineEdit()
+        remote_parameter_lbl = QtGui.QLabel(u'Параметр')
+        remote_parameter_edit = QtGui.QLineEdit()
+        modal_grid.addWidget(remote_command_edit, 1, 1, QtCore.Qt.AlignLeft)
+        modal_grid.addWidget(remote_parameter_lbl, 2, 0, QtCore.Qt.AlignLeft)
+        modal_grid.addWidget(remote_parameter_edit, 2, 1, QtCore.Qt.AlignLeft)
+        modal_grid.addWidget(remote_command_lbl, 1, 0, QtCore.Qt.AlignLeft)
+
+        self.setLayout(modal_grid)
+
 """
 class GraphicsItem(QtGui.QGraphicsPixmapItem):
     def __init__(self, *args, **kwargs):
@@ -168,6 +179,8 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         flow_control_list.addItems(["None", "XOnXOff", "Request To Send", "Request To SendXOnXOff"])
         self.grid.addWidget(flow_control_list, 6, 1)
         self.connecting_btn = QtGui.QPushButton(u"Соединение")
+        self.close_port_btn = QtGui.QPushButton(u'Закрыть порт')
+        self.grid.addWidget(self.close_port_btn, 7, 1)
         self.grid.addWidget(self.connecting_btn, 7, 0)
         self.grid.addWidget(com_lbl, 1, 0)
         self.grid.addWidget(speed_lbl, 2, 0)
@@ -347,7 +360,11 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.connect(self.coor, QtCore.SIGNAL('SendOperatingChannel(QString)'),
                      self.operating_channel_indicate, QtCore.Qt.QueuedConnection)
         self.coor.start()
+        self.connect(self.close_port_btn, QtCore.SIGNAL("clicked()"), self.close_port_info)
 
+    def close_port_info(self):
+        self.coor.closePort()
+        self.labelForIcon.setPixmap(self.conn_off_icon)
     def send_btn_clicked(self):
         _command = self.comm_edit.text()
         self.logMessage(_command)

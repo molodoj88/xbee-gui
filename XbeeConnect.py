@@ -60,7 +60,9 @@ class XbeeConnect(QtCore.QThread):
             self.sendDataToForm("Send VR command to module...")
             time.sleep(1)
             self.xbee.send('at', frame_id='A', command='VR')
-
+    def closePort(self):
+        self.ser.close()
+        self.sendDataToForm(u"Порт закрыт")
     def sendCommand(self, command, frame_id):
         self.xbee.send('at', frame_id=frame_id, command=str(command))
 
