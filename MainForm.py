@@ -47,19 +47,6 @@ class ModalWind(QtGui.QWidget):
 
         self.setLayout(modal_grid)
 
-"""
-class GraphicsItem(QtGui.QGraphicsPixmapItem):
-    def __init__(self, *args, **kwargs):
-        QtGui.QGraphicsPixmapItem.__init__(self, *args, **kwargs)
-
-    def contextMenuEvent(self, event):
-        self.mod = mainWindow()
-        menu = QtGui.QMenu()
-        settings_action = menu.addAction(u"Настройки")
-        action = menu.exec_(event.screenPos())
-        if action == settings_action:
-            self.mod.on_show()
-"""
     #Главное окно
 class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
     def __init__(self, parent=None):
@@ -88,6 +75,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.optios_log()
         self.status_bar()
         self.all_tab()
+        self.graphics_scene_items = dict()
 
 
 
@@ -301,7 +289,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         file = menubar.addMenu(u'Файл')
         file.addAction(u'Открыть соединение')
         file.addAction(u'Сохранить логи')
-        file.addAction(u'Закрыть')
+        file.addAction(u'Закрыть', self.close)
         edit = menubar.addMenu(u'Правка')
         edit.addAction(u'Отправить команду')
         conn = menubar.addMenu(u'Подключение')
@@ -320,8 +308,6 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         time = str(datetime.datetime.now())
         logging.debug(time + " New text string")
 
-#TODO В данной функции хотел сделать следующее: перехватит отправку сообщений в форму и выводить соответствующий индикатор:
-
     #Функция индикации подключения
     def connectionIndicate(self, firmware):
 
@@ -337,7 +323,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.labelForIcon.setPixmap(self.conn_on_icon)
 
 
-    def structure_network(self):
+    def read_type_command(self):
        pass
 
     #функция считавания значений для подключения модуля
@@ -369,8 +355,9 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.labelForIcon.setPixmap(self.conn_off_icon)
     def send_btn_clicked(self):
         _command = self.comm_edit.text()
+        _frame_id = self.coor.current_frame_id
         self.logMessage(_command)
-        self.coor.sendCommand(_command, 'A')
+        self.coor.sendCommand(_command, _frame_id)
 
     def on_update_network_btn_clicked(self):
         self.coor.sendNDCommand()
@@ -386,22 +373,24 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         operating_channel_lbl.setText(channel)
 
     def update_network_structure(self, response):
+        x = random.randrange(50, 800)
+        y = random.randrange(50, 600)
         response_dict = json.loads(str(response))
+        addr = response_dict['source_addr']
+        if addr in self.graphics_scene_items.values():
+            return
+        addr_item = QtGui.QGraphicsTextItem(addr, parent=None, scene=self.scene)
+        item = QtGui.QGraphicsPixmapItem(scene=self.scene)
+        self.graphics_scene_items[item] = addr
         if response_dict["device_type"] == "01":
-            self.router = QtGui.QPixmap('images/zr.png')
-            self.router_item = QtGui.QGraphicsPixmapItem(self.router, scene=self.scene)
-            self.router_item.setOffset(500, 100)
+            item.setPixmap(QtGui.QPixmap('images/zr.png'))
         if response_dict["device_type"] == "02":
-            x = random.randrange(50, 800)
-            y = random.randrange(50, 600)
-            self.end_dev = QtGui.QPixmap('images/ze.png')
-            self.end_item = QtGui.QGraphicsPixmapItem(self.end_dev, scene=self.scene)
-            self.end_item.setOffset(x, y)
+            item.setPixmap(QtGui.QPixmap('images/ze.png'))
+        item.setOffset(x, y)
+        addr_item.setPos(x, y + 50)
 
     def logMessage(self, text):
         logging.debug(text)
-
-
 
 
 
@@ -415,8 +404,6 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
     def on_show(self):
         win = ModalWind(self)
         win.show()
-
-
 
 class QTextEditLogger(logging.Handler):
     """

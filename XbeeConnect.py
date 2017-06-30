@@ -15,7 +15,11 @@ import logging
 
 commands = []
 commands_short = []
-
+FRAME_ID_LIST = ['1', '2', '3', '4', '5', '6', '7', '8', '9',
+                 'A', 'B', 'C', 'D', 'E', 'F',
+                 'G', 'I', 'J', 'K', 'O', 'P',
+                 'Q', 'R', 'S', 'T', 'U', 'V',
+                 'W', 'X', 'Y', 'Z']
 for i in XbeeCommands.ALL_CLASSES:
     for command in [command for command in dir(i) if not command.startswith("__")]:
         c = i.__dict__.get(command)
@@ -33,6 +37,7 @@ class XbeeConnect(QtCore.QThread):
         self.prefs = []
         self.logger = None
         self.connected = False
+        self.current_frame_id = []
 
     def sendDataToForm(self, data):
         self.emit(QtCore.SIGNAL('SendData(QString)'), data)
@@ -63,7 +68,16 @@ class XbeeConnect(QtCore.QThread):
     def closePort(self):
         self.ser.close()
         self.sendDataToForm(u"Порт закрыт")
+
     def sendCommand(self, command, frame_id):
+
+        if len(self.current_frame_id) == 0:
+            frame_id = FRAME_ID_LIST[0]
+            self.current_frame_id.append(frame_id)
+        else:
+            frame_id = FRAME_ID_LIST[len(self.current_frame_id)]
+            self.current_frame_id.append(frame_id)
+            print self.current_frame_id
         self.xbee.send('at', frame_id=frame_id, command=str(command))
 
     def sendNDCommand(self):
@@ -78,14 +92,13 @@ class XbeeConnect(QtCore.QThread):
             nd_response_dict = {key: data["parameter"][key].encode("hex") for key in response_list}
             nd_response_json = json.dumps(nd_response_dict)
             self.sendNDResponse(nd_response_json)
+            print nd_response_json
         elif command == "CH":
             self.operatingChannelInfo(data["parameter"].encode("hex"))
         else:
             print data
             self.sendResponse(json.dumps(data))
 
-    # def sendCommandRemote(self, command, frame_id):
-    #     self.xbee.send('remote', frame_id=frame_id, command=str(command))
 
     #тест отправки remote_at комаанды
     def sendIDRemoteCommmand(self):
