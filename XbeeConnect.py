@@ -69,8 +69,8 @@ class XbeeConnect(QtCore.QThread):
         self.ser.close()
         self.sendDataToForm(u"Порт закрыт")
 
-    def sendCommand(self, command, frame_id):
-
+    def sendCommand(self, command, frame_id, type_command):
+        type_command=str(type_command)
         if len(self.current_frame_id) == 0:
             frame_id = FRAME_ID_LIST[0]
             self.current_frame_id.append(frame_id)
@@ -78,7 +78,7 @@ class XbeeConnect(QtCore.QThread):
             frame_id = FRAME_ID_LIST[len(self.current_frame_id)]
             self.current_frame_id.append(frame_id)
             print self.current_frame_id
-        self.xbee.send('at', frame_id=frame_id, command=str(command))
+        self.xbee.send(type_command, frame_id=frame_id, command=str(command))
 
     def sendNDCommand(self):
         self.xbee.send('at', frame_id='A', command='ND')
