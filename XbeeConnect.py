@@ -45,7 +45,6 @@ class XbeeConnect(QtCore.QThread):
         print self, data
 
     def run(self):
-        # self.connectToModule()
         # Запускаем специальную тестовую функцию
         self.connectToModule()
 
@@ -65,12 +64,22 @@ class XbeeConnect(QtCore.QThread):
             self.sendDataToForm("Send VR command to module...")
             time.sleep(1)
             self.xbee.send('at', frame_id='A', command='VR')
+            time.sleep(1)
+            self.xbee.send('at', frame_id='F', command='CH')
+            time.sleep(1)
+            self.xbee.send('at', frame_id='B', command='SH')
+            time.sleep(1)
+            self.xbee.send('at', frame_id='c', command='SL')
+            time.sleep(1)
+            self.xbee.send('at', frame_id='D', command='DH')
+            time.sleep(1)
+            self.xbee.send('at', frame_id='E', command='DL')
     def closePort(self):
         self.ser.close()
         self.sendDataToForm(u"Порт закрыт")
 
-    def sendCommand(self, command, frame_id, type_command):
-        type_command=str(type_command)
+    def sendCommand(self, type_command, frame_id, command):
+        type_command = str(type_command)
         if len(self.current_frame_id) == 0:
             frame_id = FRAME_ID_LIST[0]
             self.current_frame_id.append(frame_id)
@@ -95,23 +104,21 @@ class XbeeConnect(QtCore.QThread):
             print nd_response_json
         elif command == "CH":
             self.operatingChannelInfo(data["parameter"].encode("hex"))
+        elif command == "DH":
+            self.DestinationAddressHighInfo(data["parameter"].encode("hex"))
+        elif command == "DL":
+            self.DestinationAddressLowInfo(data["parameter"].encode("hex"))
+        elif command == "SH":
+            self.SerialNumberHighInfo(data["parameter"].encode("hex"))
+        elif command == "SL":
+            self.SerialNumberLowInfo(data["parameter"].encode("hex"))
         else:
             print data
             self.sendResponse(json.dumps(data))
 
-
-    #тест отправки remote_at комаанды
-    def sendIDRemoteCommmand(self):
-        self.xbee.send('remote_at', frame_id='A', command='ID')
-
-
-    def sendIDRemoteResponse(self, response):
-        self.emit(QtCore.SIGNAL('SendIDRemoteResponse(QString)'), response)
-        print response
-
-
     def sendResponse(self, response):
         self.emit(QtCore.SIGNAL('SendResponse(QString)'), response)
+        print response
 
     def sendNDResponse(self, response):
         self.emit(QtCore.SIGNAL('SendNDResponse(QString)'), response)
@@ -122,6 +129,23 @@ class XbeeConnect(QtCore.QThread):
     def operatingChannelInfo(self, response):
         self.emit(QtCore.SIGNAL('SendOperatingChannel(QString)'), response)
 
+    def DestinationAddressHighInfo(self, response):
+        self.emit(QtCore.SIGNAL('SendDestinationAddressHigh(QString)'), response)
+        self.sendDataToForm(response)
+
+    def DestinationAddressLowInfo(self, response):
+        self.emit(QtCore.SIGNAL('SendDestinationAddressLow(QString)'), response)
+        self.sendDataToForm(response)
+
+    def SerialNumberHighInfo(self, response):
+        self.emit(QtCore.SIGNAL('SerialNumberHigh(QString)'), response)
+        self.sendDataToForm(response)
+        print response
+
+    def SerialNumberLowInfo(self, response):
+        self.emit(QtCore.SIGNAL('SerialNumberLow(QString)'), response)
+        self.sendDataToForm(response)
+        print response
 
 class LVL():
     """
