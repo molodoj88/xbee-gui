@@ -1,7 +1,7 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
-from xbee import XBee
-from xbee.zigbee import ZigBee
+from xbee import XBee,ZigBee
+#from xbee.zigbee import ZigBee
 import XbeeCommands
 import serial
 import time

@@ -24,7 +24,7 @@ for i in XbeeCommands.ALL_CLASSES:
         commands.append(command)
         commands_dict[command] = i.__dict__.get(command)
 
-"""Дополнительное окно настроек удаленных устройств"""
+"""Дополнительное окно для настроек удаленных устройств"""
 class ModalWind(QtGui.QWidget):
     def __init__(self, parent=None):
         super(ModalWind, self).__init__(parent)
@@ -39,7 +39,6 @@ class ModalWind(QtGui.QWidget):
         self.remote_command_edit = QtGui.QLineEdit()
         remote_parameter_lbl = QtGui.QLabel(u'Параметр')
         remote_parameter_edit = QtGui.QLineEdit()
-
         type_commands_lbl_mod = QtGui.QLabel(u'Тип команды')
         modal_grid.addWidget(type_commands_lbl_mod, 1, 0)
         self.list_type_commands_mod = QtGui.QComboBox()
@@ -53,235 +52,40 @@ class ModalWind(QtGui.QWidget):
         self.setLayout(modal_grid)
 """Главное окно"""
 class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
+    "Инициализация основного окна и подключение всех элементов приложения"
     def __init__(self, parent=None):
         super(mainWindow, self).__init__(parent)
         QtGui.QWidget.__init__(self, parent)
         self.centralWidget = QtGui.QWidget()
-        self.input_data()
         self.setCentralWidget(self.centralWidget)
         self.resize(800, 600)
         self.setWindowTitle('Zigbee')
         self.setWindowIcon(QtGui.QIcon("zigbee.png"))
+        self.input_data()
+        self.main_tab()
+        self.options_log()
+        self.status_bar()
+        self.all_tabs()
+        self.graphics_scene_items = dict()
+
+    "Инициализация основного таба и 3х вкладок(подключение, управление, структура сети)"
+    def main_tab (self):
         self.tabWidget = QtGui.QTabWidget()
         self.centralWidgetLayout = QtGui.QVBoxLayout(self.centralWidget)
         self.centralWidgetLayout.addWidget(self.tabWidget)
-
         """ Вкладка подключение """
         self.tab1 = QtGui.QWidget()
-
         """ Вкладка управление """
         self.tab2 = QtGui.QWidget()
-
         """ Вкладка построение сети """
         self.tab3 = QtGui.QWidget()
-
         self.tabWidget.addTab(self.tab1, u'Подключение')
         self.tabWidget.addTab(self.tab2, u'Управление')
         self.tabWidget.addTab(self.tab3, u'Структура сети')
         self.grid = QtGui.QGridLayout()
         self.grid.setSpacing(10)
-        self.optios_log()
-        self.status_bar()
-        self.all_tab()
-        self.graphics_scene_items = dict()
 
-    """ Входные данные """
-    def input_data(self):
-        self.coor = None
-        self.connPrefs = []
-        self.form = self
-        self.module_type = ''
-
-    """ Все вкладки """
-    def all_tab(self):
-        self.tab_connect()
-        self.tab_control()
-        self.tab_network_structure()
-
-    """ Вкладка Подключение """
-    def tab_connect(self):
-        tab1_Layout = QtGui.QHBoxLayout(self.tab1)
-        options_connect = QtGui.QGroupBox(u'Параметры подключения')
-        description_st_connect = QtGui.QGroupBox(u'Дополнительная информация')
-        tab1_Layout.addWidget(options_connect)
-        tab1_Layout.addWidget(description_st_connect, QtCore.Qt.AlignCenter)
-        options_layout = QtGui.QHBoxLayout(options_connect)
-        list_param = QtGui.QWidget()
-        options_layout.addWidget(list_param)
-        options_layout.addWidget(QtGui.QWidget())
-        list_param.setLayout(self.grid)
-        description_layout = QtGui.QVBoxLayout(description_st_connect)
-        status_connect = QtGui.QGroupBox(u'Статус подключения')
-        info_connecting_dev = QtGui.QGroupBox(u'64-битный адрес источника')
-        info_connecting_dev_addr = QtGui.QGroupBox(u'64-битный адрес назначения')
-        description_layout.addWidget(status_connect)
-        description_layout.addWidget(info_connecting_dev, QtCore.Qt.AlignCenter)
-        description_layout.addWidget(info_connecting_dev_addr, QtCore.Qt.AlignCenter)
-        self.st_connect_layout = QtGui.QHBoxLayout()
-        self.info_connecting_dev_layout = QtGui.QGridLayout(info_connecting_dev)
-        self.info_connecting_dev_addr_layout = QtGui.QGridLayout(info_connecting_dev_addr)
-        self.parameter_connecting()
-
-        """Индикатор подключения"""
-
-        self.conn_off_icon = QtGui.QPixmap('images/red_led.png')
-        self.conn_on_icon = QtGui.QPixmap('images/green_led.png')
-        self.labelForIcon = QtGui.QLabel()
-        self.Icon_lbl = QtGui.QLabel(self.module_type)
-        self.st_connect_layout.addWidget(self.Icon_lbl)
-        self.labelForIcon.setPixmap(self.conn_off_icon)
-        self.st_connect_layout.addWidget(self.labelForIcon)
-        status_connect.setLayout(self.st_connect_layout)
-
-    """ Парамметры подключения, для 1-ой вкладки"""
-    def parameter_connecting(self):
-        com_lbl = QtGui.QLabel('COM')
-        com_list = QtGui.QComboBox()
-        com_list.setFixedWidth(80)
-        com_list.addItems(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
-        self.grid.addWidget(com_list, 1, 1)
-        speed_lbl = QtGui.QLabel('Speed')
-        speed_list = QtGui.QComboBox()
-        speed_list.setFixedWidth(80)
-        speed_list.addItems(["9600", "115200"])
-        self.grid.addWidget(speed_list, 2, 1)
-        data_bits_lbl = QtGui.QLabel('Data bits')
-        data_bits_list = QtGui.QComboBox()
-        data_bits_list.setFixedWidth(80)
-        data_bits_list.addItems(["5", "6", "7", "8"])
-        self.grid.addWidget(data_bits_list, 3, 1)
-        stop_bit_lbl = QtGui.QLabel('Stop bit')
-        stop_bit_list = QtGui.QComboBox()
-        stop_bit_list.setFixedWidth(80)
-        stop_bit_list.addItems(["1", "2"])
-        self.grid.addWidget(stop_bit_list, 4, 1)
-        parity_lbl = QtGui.QLabel('Parity')
-        parity_list = QtGui.QComboBox()
-        parity_list.setFixedWidth(80)
-        parity_list.addItems(["None", "Odd", "Even", "Mark", "Space"])
-        self.grid.addWidget(parity_list, 5, 1)
-        flow_control_lbl = QtGui.QLabel('Flow Control')
-        flow_control_list = QtGui.QComboBox()
-        flow_control_list.setFixedWidth(80)
-        flow_control_list.addItems(["None", "XOnXOff", "Request To Send", "Request To SendXOnXOff"])
-        self.grid.addWidget(flow_control_list, 6, 1)
-        self.connecting_btn = QtGui.QPushButton(u"Соединение")
-        self.close_port_btn = QtGui.QPushButton(u'Закрыть порт')
-        self.grid.addWidget(self.close_port_btn, 7, 1)
-        self.grid.addWidget(self.connecting_btn, 7, 0)
-        self.grid.addWidget(com_lbl, 1, 0)
-        self.grid.addWidget(speed_lbl, 2, 0)
-        self.grid.addWidget(data_bits_lbl, 3, 0)
-        self.grid.addWidget(stop_bit_lbl, 4, 0)
-        self.grid.addWidget(parity_lbl, 5, 0)
-        self.grid.addWidget(flow_control_lbl, 6, 0)
-        com_lbl.resize(500, com_lbl.height())
-        self.connPrefFiels = [com_list, speed_list, data_bits_list, stop_bit_list, parity_list, flow_control_list]
-
-    """ Вкладка управление """
-    def tab_control(self):
-        tab2_layout = QtGui.QHBoxLayout(self.tab2)
-        send_commands = QtGui.QGroupBox(u'Отправка команды')
-        list_commands = QtGui.QGroupBox(u'Выбор команды')
-        tab2_layout.addWidget(send_commands)
-        tab2_layout.addWidget(list_commands, QtCore.Qt.AlignLeft)
-        send_commands_layout = QtGui.QGridLayout(send_commands)
-        self.list_commands_layout = QtGui.QHBoxLayout(list_commands)
-        self.list_all_commands()
-        type_commands_lbl = QtGui.QLabel(u'Тип команды')
-        send_commands_layout.addWidget(type_commands_lbl, 1, 0)
-        self.list_type_commands = QtGui.QComboBox()
-        self.list_type_commands.setFixedWidth(80)
-        self.list_type_commands.addItems(["at", "remote_at"])
-        send_commands_layout.addWidget(self.list_type_commands, 1, 1)
-        command_lbl = QtGui.QLabel(u'Команда')
-        send_commands_layout.addWidget(command_lbl, 2, 0)
-        self.comm_edit = QtGui.QLineEdit()
-        self.comm_edit.setFixedWidth(80)
-        self.addr_dest_lbl = QtGui.QLabel(u'Адрес назначения')
-        self.addr_dest_edit = QtGui.QLineEdit()
-        self.addr_dest_edit.setToolTip(u'Указывать в случае remote_at')
-        self.addr_dest_edit.setFixedWidth(80)
-        send_commands_layout.addWidget(self.addr_dest_lbl, 4, 0)
-        send_commands_layout.addWidget(self.addr_dest_edit, 4, 1)
-
-        """ Автодополнения команд """
-
-        model = QtGui.QStringListModel()
-        model.setStringList(commands)
-        completer = QtGui.QCompleter()
-        completer.setCaseSensitivity(0)
-        completer.setModel(model)
-        self.comm_edit.setCompleter(completer)
-        send_commands_layout.addWidget(self.comm_edit, 2, 1)
-        parameter_lbl = QtGui.QLabel(u'Параметры')
-        send_commands_layout.addWidget(parameter_lbl, 3, 0)
-        self.comm_parameter_edit = QtGui.QLineEdit()
-        self.comm_parameter_edit.setFixedWidth(80)
-        send_commands_layout.addWidget(self.comm_parameter_edit, 3, 1)
-        self.send_command_btn = QtGui.QPushButton(u'Отправить')
-        send_commands_layout.addWidget(self.send_command_btn, 5, 0)
-        self.send_command_btn.clicked.connect(self.send_btn_clicked)
-
-    """ Список доступных команд """
-
-    def list_all_commands(self):
-        self.commands_list_model = QtGui.QStandardItemModel()
-        self.view = QtGui.QTreeView()
-        self.view.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
-        self.view.setModel(self.commands_list_model)
-        self.commands_list_model.setHorizontalHeaderLabels([u'Команда'])
-        parent = self.commands_list_model.invisibleRootItem()
-        for c in XbeeCommands.ALL_CLASSES:
-            class_name_item = QtGui.QStandardItem(c.__name__[1:])
-            parent.appendRow(class_name_item)
-            for c_item in [QtGui.QStandardItem(c) for c in dir(c) if not c.startswith("__")]:
-                class_name_item.appendRow(c_item)
-        self.list_commands_layout.addWidget(self.view)
-
-        def on_item_clicked(index):
-            command_str = str(index.data().toString())
-            if index.parent().column() == 0:
-                self.comm_edit.setText(commands_dict[command_str].command)
-
-        self.connect(self.view, QtCore.SIGNAL("clicked(const QModelIndex&)"), on_item_clicked)
-
-    """ Логирование """
-
-    def optios_log(self):
-        self.logWidget = QTextEditLogger(self)
-        self.logWidget.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', "%Y-%m-%d %H:%M:%S"))
-        logging.getLogger().addHandler(self.logWidget)
-        logging.getLogger().setLevel(logging.DEBUG)
-
-        """Сохранение логов в файл"""
-
-        name_file_log = logging.FileHandler('test.log')
-        name_file_log.setLevel(logging.DEBUG)
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.ERROR)
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-        ch.setFormatter(formatter)
-        name_file_log.setFormatter(formatter)
-        logging.getLogger().addHandler(ch)
-        logging.getLogger().addHandler(name_file_log)
-        self.centralWidgetLayout.addWidget(self.logWidget.widget)
-        logging.debug("Logger initialized")
-
-    """Функция для инициализации третьей вкладки (структура сети)"""
-    def tab_network_structure(self):
-        self.update_network_btn = QtGui.QPushButton(u"Обновить")
-        self.update_network_btn.setFixedSize(60, 40)
-        self.scene = QtGui.QGraphicsScene(parent=self.tab3)
-        self.scene_view = QtGui.QGraphicsView(self.scene)
-        self.scene_view_widget = QtGui.QVBoxLayout(self.tab3)
-        self.scene_view_widget.addWidget(self.update_network_btn)
-        self.scene_view_widget.addWidget(self.scene_view)
-        self.connect(self.connecting_btn, QtCore.SIGNAL("clicked()"), lambda fields=self.connPrefFiels: self.readPrefs(fields))
-        self.update_network_btn.clicked.connect(self.on_update_network_btn_clicked)
-        self.tabWidget.currentChanged.connect(self.hide_log)
-
-    """ Верхнее меню управления """
+    "Верхнее меню управления"
     def status_bar(self):
         menubar = self.menuBar()
         file = menubar.addMenu(u'Файл')
@@ -296,13 +100,182 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         help.addAction(u'Список АТ-команд')
         exit = menubar.addMenu(u'Выход')
 
+    """ Входные данные """
+    def input_data(self):
+        self.coor = None
+        self.connPrefs = []
+        self.form = self
+        self.module_type = ''
+
+    """ Все вкладки """
+    def all_tabs(self):
+        self.tab_connect()
+        self.tab_control()
+        self.tab_network_structure()
+
+    """ Вкладка Подключение """
+    def tab_connect(self):
+        tab_connect_layout = QtGui.QHBoxLayout(self.tab1)
+        options_connect = QtGui.QGroupBox(u'Параметры подключения')
+        description_status_connect = QtGui.QGroupBox(u'Дополнительная информация')
+        tab_connect_layout.addWidget(options_connect)
+        tab_connect_layout.addWidget(description_status_connect, QtCore.Qt.AlignCenter)
+        options_layout = QtGui.QHBoxLayout(options_connect)
+        list_parameters = QtGui.QWidget()
+        options_layout.addWidget(list_parameters)
+        options_layout.addWidget(QtGui.QWidget())
+        list_parameters.setLayout(self.grid)
+        description_status_layout = QtGui.QVBoxLayout(description_status_connect)
+        status_connect = QtGui.QGroupBox(u'Статус подключения')
+        info_source_address = QtGui.QGroupBox(u'64-битный адрес источника')
+        info_destination_address = QtGui.QGroupBox(u'64-битный адрес назначения')
+        description_status_layout.addWidget(status_connect)
+        description_status_layout.addWidget(info_source_address, QtCore.Qt.AlignCenter)
+        description_status_layout.addWidget(info_destination_address, QtCore.Qt.AlignCenter)
+        self.status_connect_layout = QtGui.QHBoxLayout()
+        self.info_source_address_layout = QtGui.QGridLayout(info_source_address)
+        self.info_destination_address_layout = QtGui.QGridLayout(info_destination_address)
+        self.parameters_connecting()
+
+        """Индикатор подключения"""
+        self.conn_off_icon = QtGui.QPixmap('images/red_led.png')
+        self.conn_on_icon = QtGui.QPixmap('images/green_led.png')
+        self.labelForIcon = QtGui.QLabel()
+        self.Icon_lbl = QtGui.QLabel(self.module_type)
+        self.status_connect_layout.addWidget(self.Icon_lbl)
+        self.labelForIcon.setPixmap(self.conn_off_icon)
+        self.status_connect_layout.addWidget(self.labelForIcon)
+        status_connect.setLayout(self.status_connect_layout)
+
+    """ Парамметры подключения, для 1-ой вкладки"""
+    def parameters_connecting(self):
+        com_lbl = QtGui.QLabel('COM')
+        com_list = QtGui.QComboBox()
+        com_list.setFixedWidth(80)
+        com_list.addItems(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+        self.grid.addWidget(com_list, 1, 1)
+        speed_lbl = QtGui.QLabel('Speed')
+        speed_list = QtGui.QComboBox()
+        speed_list.setFixedWidth(80)
+        speed_list.addItems(["9600", "115200"])
+        self.grid.addWidget(speed_list, 2, 1)
+        self.connecting_btn = QtGui.QPushButton(u"Соединение")
+        self.close_port_btn = QtGui.QPushButton(u'Закрыть порт')
+        self.grid.addWidget(self.close_port_btn, 7, 1)
+        self.grid.addWidget(self.connecting_btn, 7, 0)
+        self.grid.addWidget(com_lbl, 1, 0)
+        self.grid.addWidget(speed_lbl, 2, 0)
+        com_lbl.resize(500, com_lbl.height())
+        self.connPrefFiels = [com_list, speed_list]
+
+    """ Вкладка управление """
+    def tab_control(self):
+        tab_control_layout = QtGui.QHBoxLayout(self.tab2)
+        send_commands = QtGui.QGroupBox(u'Отправка команды')
+        list_commands = QtGui.QGroupBox(u'Список доступных команд')
+        tab_control_layout.addWidget(send_commands)
+        tab_control_layout.addWidget(list_commands, QtCore.Qt.AlignLeft)
+        send_commands_layout = QtGui.QGridLayout(send_commands)
+        self.list_commands_layout = QtGui.QHBoxLayout(list_commands)
+        self.list_all_commands()
+        type_commands_lbl = QtGui.QLabel(u'Тип команды')
+        send_commands_layout.addWidget(type_commands_lbl, 1, 0)
+        self.list_type_commands = QtGui.QComboBox()
+        self.list_type_commands.setFixedWidth(80)
+        self.list_type_commands.addItems(["at", "remote_at"])
+        send_commands_layout.addWidget(self.list_type_commands, 1, 1)
+        command_lbl = QtGui.QLabel(u'Команда')
+        send_commands_layout.addWidget(command_lbl, 2, 0)
+        self.command_edit = QtGui.QLineEdit()
+        self.command_edit.setFixedWidth(80)
+        send_commands_layout.addWidget(self.command_edit, 2, 1)
+        parameter_lbl = QtGui.QLabel(u'Параметры')
+        send_commands_layout.addWidget(parameter_lbl, 3, 0)
+        self.comm_parameter_edit = QtGui.QLineEdit()
+        self.comm_parameter_edit.setFixedWidth(80)
+        send_commands_layout.addWidget(self.comm_parameter_edit, 3, 1)
+        self.addr_dest_lbl = QtGui.QLabel(u'Адрес назначения')
+        self.addr_dest_edit = QtGui.QLineEdit()
+        self.addr_dest_edit.setToolTip(u'Указывать в случае remote_at')
+        self.addr_dest_edit.setFixedWidth(80)
+        send_commands_layout.addWidget(self.addr_dest_lbl, 4, 0)
+        send_commands_layout.addWidget(self.addr_dest_edit, 4, 1)
+
+        """ Автодополнения команд начало """
+        model = QtGui.QStringListModel()
+        model.setStringList(commands)
+        completer = QtGui.QCompleter()
+        completer.setCaseSensitivity(0)
+        completer.setModel(model)
+        self.command_edit.setCompleter(completer)
+        """ Автодополнения команд конец """
+
+        self.send_command_btn = QtGui.QPushButton(u'Отправить')
+        send_commands_layout.addWidget(self.send_command_btn, 5, 0)
+        self.send_command_btn.clicked.connect(self.send_btn_clicked)
+
+    """ Список доступных команд """
+    def list_all_commands(self):
+        self.commands_list_model = QtGui.QStandardItemModel()
+        self.view = QtGui.QTreeView()
+        self.view.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        self.view.setModel(self.commands_list_model)
+        self.commands_list_model.setHorizontalHeaderLabels([u'Выберите команду'])
+        parent = self.commands_list_model.invisibleRootItem()
+        for c in XbeeCommands.ALL_CLASSES:
+            class_name_item = QtGui.QStandardItem(c.__name__[1:])
+            parent.appendRow(class_name_item)
+            for c_item in [QtGui.QStandardItem(c) for c in dir(c) if not c.startswith("__")]:
+                class_name_item.appendRow(c_item)
+        self.list_commands_layout.addWidget(self.view)
+
+        def on_item_clicked(index):
+            command_str = str(index.data().toString())
+            if index.parent().column() == 0:
+                self.command_edit.setText(commands_dict[command_str].command)
+
+        self.connect(self.view, QtCore.SIGNAL("clicked(const QModelIndex&)"), on_item_clicked)
+
+    """Вкладка структура сети)"""
+    def tab_network_structure(self):
+        self.update_network_btn = QtGui.QPushButton(u"Обновить")
+        self.update_network_btn.setFixedSize(60, 40)
+        self.scene = QtGui.QGraphicsScene(parent=self.tab3)
+        self.scene_view = QtGui.QGraphicsView(self.scene)
+        self.scene_view_widget = QtGui.QVBoxLayout(self.tab3)
+        self.scene_view_widget.addWidget(self.update_network_btn)
+        self.scene_view_widget.addWidget(self.scene_view)
+        self.connect(self.connecting_btn, QtCore.SIGNAL("clicked()"), lambda fields=self.connPrefFiels: self.readPrefs(fields))
+        self.update_network_btn.clicked.connect(self.on_update_network_btn_clicked)
+        self.tabWidget.currentChanged.connect(self.hide_log)
+
+    """ Логирование """
+    def options_log(self):
+        self.logWidget = QTextEditLogger(self)
+        self.logWidget.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', "%Y-%m-%d %H:%M:%S"))
+        logging.getLogger().addHandler(self.logWidget)
+        logging.getLogger().setLevel(logging.DEBUG)
+
+        """Сохранение логов в файл"""
+        name_file_log = logging.FileHandler('test.log')
+        name_file_log.setLevel(logging.DEBUG)
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.ERROR)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        ch.setFormatter(formatter)
+        name_file_log.setFormatter(formatter)
+        logging.getLogger().addHandler(ch)
+        logging.getLogger().addHandler(name_file_log)
+        self.centralWidgetLayout.addWidget(self.logWidget.widget)
+        logging.debug("Logger initialized")
+
     def hide_log(self, ss):
         if ss == 2:
             self.logWidget.widget.setVisible(False)
         else:
             self.logWidget.widget.setVisible(True)
 
-    """Функция индикации подключения"""
+    """Функция индикации подключения и вывод версии прошивки"""
     def connectionIndicate(self, firmware):
         self.Icon_lbl.setText(module_type_dict[str(firmware[:2])])
         firm_id = str(firmware[:2])
@@ -312,7 +285,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
             self.coor_item.setOffset(100, 300)
         self.labelForIcon.setPixmap(self.conn_on_icon)
 
-    """функция считавания значений для подключения модуля"""
+    """функция считавания значений и подключения модуля"""
     def readPrefs(self, fields):
         self.connPrefs = []
         for i in fields:
@@ -320,7 +293,6 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
             self.connPrefs.append(item)
 
         # отправляем в поток параметры подключения
-        # старт
         self.coor = XbeeConnect()
         self.coor.com = str("COM" + self.connPrefs[0])
         self.coor.speed = int(self.connPrefs[1])
@@ -344,7 +316,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.coor.start()
         self.connect(self.close_port_btn, QtCore.SIGNAL("clicked()"), self.close_port_info)
 
-
+    "Функция закрытия com порта"
     def close_port_info(self):
         self.coor.closePort()
         self.labelForIcon.setPixmap(self.conn_off_icon)
@@ -352,7 +324,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
     def send_btn_clicked(self):
         _type_command = self.list_type_commands.currentText()
         _frame_id = self.coor.current_frame_id
-        _command = self.comm_edit.text()
+        _command = self.command_edit.text()
         self.logMessage(_command)
         self.coor.sendCommand(_type_command, _frame_id, _command)
 
@@ -362,36 +334,36 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
     def operating_channel_indicate(self, channel):
         operating_channel_name_lbl = QtGui.QLabel(u"Рабочий канал: ")
         operating_channel_lbl = QtGui.QLabel()
-        self.st_connect_layout.addWidget(operating_channel_name_lbl)
-        self.st_connect_layout.addWidget(operating_channel_lbl)
+        self.status_connect_layout.addWidget(operating_channel_name_lbl)
+        self.status_connect_layout.addWidget(operating_channel_lbl)
         operating_channel_lbl.setText(channel)
 
     def dh_info_connecting_dev(self, DH):
         info_dh_lbl_name = QtGui.QLabel(u"Серийный номер(верхний): ")
         info_dh_lbl = QtGui.QLabel()
-        self.info_connecting_dev_addr_layout.addWidget(info_dh_lbl_name, 1, 0)
-        self.info_connecting_dev_addr_layout.addWidget(info_dh_lbl, 1, 1)
+        self.info_destination_address_layout.addWidget(info_dh_lbl_name, 1, 0)
+        self.info_destination_address_layout.addWidget(info_dh_lbl, 1, 1)
         info_dh_lbl.setText(DH)
 
     def dl_info_connecting_dev(self, DL):
         info_dl_lbl_name = QtGui.QLabel(u"Серийный номер(нижний): ")
         info_dl_lbl = QtGui.QLabel()
-        self.info_connecting_dev_addr_layout.addWidget(info_dl_lbl_name, 2, 0)
-        self.info_connecting_dev_addr_layout.addWidget(info_dl_lbl, 2, 1)
+        self.info_destination_address_layout.addWidget(info_dl_lbl_name, 2, 0)
+        self.info_destination_address_layout.addWidget(info_dl_lbl, 2, 1)
         info_dl_lbl.setText(DL)
 
     def sh_info_connecting_dev(self, SH):
         info_dh_lbl_name = QtGui.QLabel(u"Серийный номер(верхний): ")
         info_dh_lbl = QtGui.QLabel()
-        self.info_connecting_dev_layout.addWidget(info_dh_lbl_name, 1, 0)
-        self.info_connecting_dev_layout.addWidget(info_dh_lbl, 1, 1)
+        self.info_source_address_layout.addWidget(info_dh_lbl_name, 1, 0)
+        self.info_source_address_layout.addWidget(info_dh_lbl, 1, 1)
         info_dh_lbl.setText(SH)
 
     def sl_info_connecting_dev(self, SL):
         info_dl_lbl_name = QtGui.QLabel(u"Серийный номер(нижний): ")
         info_dl_lbl = QtGui.QLabel()
-        self.info_connecting_dev_layout.addWidget(info_dl_lbl_name, 2, 0)
-        self.info_connecting_dev_layout.addWidget(info_dl_lbl, 2, 1)
+        self.info_source_address_layout.addWidget(info_dl_lbl_name, 2, 0)
+        self.info_source_address_layout.addWidget(info_dl_lbl, 2, 1)
         info_dl_lbl.setText(SL)
 
     def update_network_structure(self, response):
