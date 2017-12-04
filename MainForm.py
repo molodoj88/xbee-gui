@@ -33,7 +33,10 @@ class ModalWind(QtGui.QWidget):
         self.setWindowTitle(u'Управление удаленным устройством')
         self.resize(300, 300)
         self.send_remote_command_btn = QtGui.QPushButton(u'Отправить')
-        modal_grid = QtGui.QGridLayout()
+        modal_grid_widget = QtGui.QWidget()
+        modal_layout = QtGui.QHBoxLayout(self)
+        modal_grid = QtGui.QGridLayout(modal_grid_widget)
+        modal_layout.addWidget(modal_grid_widget)
         modal_grid.addWidget(self.send_remote_command_btn, 4, 0)
         remote_command_lbl = QtGui.QLabel(u'Команда')
         self.remote_command_edit = QtGui.QLineEdit()
@@ -49,7 +52,35 @@ class ModalWind(QtGui.QWidget):
         modal_grid.addWidget(remote_parameter_lbl, 3, 0, QtCore.Qt.AlignLeft)
         modal_grid.addWidget(remote_parameter_edit, 3, 1, QtCore.Qt.AlignLeft)
         modal_grid.addWidget(remote_command_lbl, 2, 0, QtCore.Qt.AlignLeft)
-        self.setLayout(modal_grid)
+        modal_right_widget = QtGui.QWidget()
+        modal_layout.addWidget(modal_right_widget)
+        modal_all_commands_widget = AllCommandsListWidget(self.remote_command_edit)
+        modal_layout.addWidget(modal_all_commands_widget)
+
+class AllCommandsListWidget(QtGui.QWidget):
+    def __init__(self, command_edit, parent=None):
+        super(AllCommandsListWidget, self).__init__(parent)
+        self.commands_list_model = QtGui.QStandardItemModel()
+        self.view = QtGui.QTreeView()
+        self.view.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        self.view.setModel(self.commands_list_model)
+        self.commands_list_model.setHorizontalHeaderLabels([u'Выберите команду'])
+        parent = self.commands_list_model.invisibleRootItem()
+        for c in XbeeCommands.ALL_CLASSES:
+            class_name_item = QtGui.QStandardItem(c.__name__[1:])
+            parent.appendRow(class_name_item)
+            for c_item in [QtGui.QStandardItem(c) for c in dir(c) if not c.startswith("__")]:
+                class_name_item.appendRow(c_item)
+        layout = QtGui.QHBoxLayout(self)
+        layout.addWidget(self.view)
+
+        def on_item_clicked(index):
+            command_str = str(index.data().toString())
+            if index.parent().column() == 0:
+                command_edit.setText(commands_dict[command_str].command)
+
+        self.connect(self.view, QtCore.SIGNAL("clicked(const QModelIndex&)"), on_item_clicked)
+
 """Главное окно"""
 class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
     "Инициализация основного окна и подключение всех элементов приложения"
@@ -176,6 +207,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         tab_control_layout.addWidget(send_commands)
         tab_control_layout.addWidget(list_commands, QtCore.Qt.AlignLeft)
         send_commands_layout = QtGui.QGridLayout(send_commands)
+        self.command_edit = QtGui.QLineEdit()
         self.list_commands_layout = QtGui.QHBoxLayout(list_commands)
         self.list_all_commands()
         type_commands_lbl = QtGui.QLabel(u'Тип команды')
@@ -186,7 +218,6 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         send_commands_layout.addWidget(self.list_type_commands, 1, 1)
         command_lbl = QtGui.QLabel(u'Команда')
         send_commands_layout.addWidget(command_lbl, 2, 0)
-        self.command_edit = QtGui.QLineEdit()
         self.command_edit.setFixedWidth(80)
         send_commands_layout.addWidget(self.command_edit, 2, 1)
         parameter_lbl = QtGui.QLabel(u'Параметры')
@@ -216,25 +247,8 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
 
     """ Список доступных команд """
     def list_all_commands(self):
-        self.commands_list_model = QtGui.QStandardItemModel()
-        self.view = QtGui.QTreeView()
-        self.view.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
-        self.view.setModel(self.commands_list_model)
-        self.commands_list_model.setHorizontalHeaderLabels([u'Выберите команду'])
-        parent = self.commands_list_model.invisibleRootItem()
-        for c in XbeeCommands.ALL_CLASSES:
-            class_name_item = QtGui.QStandardItem(c.__name__[1:])
-            parent.appendRow(class_name_item)
-            for c_item in [QtGui.QStandardItem(c) for c in dir(c) if not c.startswith("__")]:
-                class_name_item.appendRow(c_item)
-        self.list_commands_layout.addWidget(self.view)
-
-        def on_item_clicked(index):
-            command_str = str(index.data().toString())
-            if index.parent().column() == 0:
-                self.command_edit.setText(commands_dict[command_str].command)
-
-        self.connect(self.view, QtCore.SIGNAL("clicked(const QModelIndex&)"), on_item_clicked)
+        self.tab2_all_commands_widget = AllCommandsListWidget(self.command_edit)
+        self.list_commands_layout.addWidget(self.tab2_all_commands_widget)
 
     """Вкладка структура сети)"""
     def tab_network_structure(self):

@@ -51,6 +51,9 @@ class Command:
         else:
             return d
 
+    def send(self):
+        pass
+
 
 class CAddressing:
     DESTINATION_ADDRESS_HIGH = Command("DH", "CRE", "0-0xFFFFFFFF", "0")
