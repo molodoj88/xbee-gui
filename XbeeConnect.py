@@ -78,7 +78,7 @@ class XbeeConnect(QtCore.QThread):
         self.ser.close()
         self.sendDataToForm(u"Порт закрыт")
 
-    def sendCommand(self, type_command, frame_id, command):
+    def sendCommand(self, type_command, frame_id, destination_address, command, parameters):
         type_command = str(type_command)
         if len(self.current_frame_id) == 0:
             frame_id = FRAME_ID_LIST[0]
@@ -87,7 +87,10 @@ class XbeeConnect(QtCore.QThread):
             frame_id = FRAME_ID_LIST[len(self.current_frame_id)]
             self.current_frame_id.append(frame_id)
             print self.current_frame_id
-        self.xbee.send(type_command, frame_id=frame_id, command=str(command))
+        self.xbee.send(type_command, frame_id=frame_id, dest_adrr=str(destination_address), command=str(command), parameter=str(parameters))
+
+    #def sendRemoteCommands(self, destination_address, command, parameter):
+        #self.xbee.remote_at(dest_addr=str(destination_address), command=str(command), parameter=str(command))
 
     def sendNDCommand(self):
         self.xbee.send('at', frame_id='A', command='ND')

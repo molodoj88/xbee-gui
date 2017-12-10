@@ -31,7 +31,7 @@ class ModalWind(QtGui.QWidget):
         self.setWindowFlags(QtCore.Qt.Dialog | QtCore.Qt.WindowSystemMenuHint)
         self.setWindowModality(QtCore.Qt.WindowModal)
         self.setWindowTitle(u'Управление удаленным устройством')
-        self.resize(300, 300)
+        self.resize(550, 300)
         self.send_remote_command_btn = QtGui.QPushButton(u'Отправить')
         modal_grid_widget = QtGui.QWidget()
         modal_layout = QtGui.QHBoxLayout(self)
@@ -338,9 +338,11 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
     def send_btn_clicked(self):
         _type_command = self.list_type_commands.currentText()
         _frame_id = self.coor.current_frame_id
+        _dest_addr = self.addr_dest_edit.text()
         _command = self.command_edit.text()
+        _parameter = self.comm_parameter_edit.text()
         self.logMessage(_command)
-        self.coor.sendCommand(_type_command, _frame_id, _command)
+        self.coor.sendCommand(_type_command, _frame_id, _dest_addr, _command, _parameter)
 
     def on_update_network_btn_clicked(self):
         self.coor.sendNDCommand()
