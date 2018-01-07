@@ -110,7 +110,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.tab2 = QtGui.QWidget()
         """ Вкладка построение сети """
         self.tab3 = QtGui.QWidget()
-        self.tabWidget.addTab(self.tab1, u'Подключение')
+        self.tabWidget.addTab(self.tab1, u'Соединение')
         self.tabWidget.addTab(self.tab2, u'Управление')
         self.tabWidget.addTab(self.tab3, u'Структура сети')
         self.grid = QtGui.QGridLayout()
@@ -144,22 +144,69 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.tab_control()
         self.tab_network_structure()
 
-    """ Вкладка Подключение """
+    """ Вкладка соединение """
     def tab_connect(self):
         tab_connect_layout = QtGui.QHBoxLayout(self.tab1)
-        options_connect = QtGui.QGroupBox(u'Параметры подключения')
+        options_connect = QtGui.QGroupBox(u'Настройки COM порта')
         description_status_connect = QtGui.QGroupBox(u'Дополнительная информация')
+        start_settings_module = QtGui.QGroupBox(u'Быстрая настройка модуля')
+        start_settings_module.setFixedWidth(210)
+        options_connect.setFixedWidth(235)
+
         tab_connect_layout.addWidget(options_connect)
-        tab_connect_layout.addWidget(description_status_connect, QtCore.Qt.AlignCenter)
+        tab_connect_layout.addWidget(start_settings_module)
+        tab_connect_layout.addWidget(description_status_connect)
+
         options_layout = QtGui.QHBoxLayout(options_connect)
+
+        start_settings_layout = QtGui.QGridLayout(start_settings_module)
+        pan_id_label = QtGui.QLabel('PAN ID')
+        name_module_label = QtGui.QLabel(u'Имя модуля')
+        channel_on_off = QtGui.QLabel(u'Канал связи')
+        start_settings_layout.addWidget(pan_id_label, 1, 0)
+        start_settings_layout.addWidget(name_module_label, 2, 0)
+        start_settings_layout.addWidget(channel_on_off, 3, 0)
+
+        self.pan_id_edit = QtGui.QLineEdit()
+        self.pan_id_edit.setFixedWidth(50)
+        start_settings_layout.addWidget(self.pan_id_edit, 1, 1)
+        self.send_commandId_btn = QtGui.QPushButton(u'ок')
+        start_settings_layout.addWidget(self.send_commandId_btn, 1, 2)
+        self.send_commandId_btn.clicked.connect(self.send_id_command_clicked)
+
+        self.name_edit = QtGui.QLineEdit()
+        self.name_edit.setFixedWidth(50)
+        start_settings_layout.addWidget(self.name_edit, 2, 1)
+        self.send_commandNI_btn = QtGui.QPushButton(u'ок')
+        start_settings_layout.addWidget(self.send_commandNI_btn, 2, 2)
+        self.send_commandNI_btn.clicked.connect(self.send_ni_command_clicked)
+
+        self.channel_edit = QtGui.QLineEdit()
+        self.channel_edit.setFixedWidth(50)
+        start_settings_layout.addWidget(self.channel_edit, 3, 1)
+        self.send_commandJV_btn = QtGui.QPushButton(u'ок')
+        start_settings_layout.addWidget(self.send_commandJV_btn, 3, 2)
+        self.send_commandJV_btn.clicked.connect(self.send_jv_command_clicked)
+
+        self.save_settings_btn = QtGui.QPushButton(u'Сохранить')
+        self.default_settings_btn = QtGui.QPushButton(u'Сбросить')
+        self.save_settings_btn.setFixedWidth(70)
+        self.default_settings_btn.setFixedWidth(70)
+        start_settings_layout.addWidget(self.save_settings_btn, 4, 0)
+        start_settings_layout.addWidget(self.default_settings_btn, 4, 2)
+        self.save_settings_btn.clicked.connect(self.save_settings_btn_clicked)
+        self.default_settings_btn.clicked.connect(self.default_settings_btn_clicked)
+        #list_commands_start_settings = QtGui.QWidget()
+        #start_settings_layout.addWidget(list_commands_start_settings)
+
         list_parameters = QtGui.QWidget()
         options_layout.addWidget(list_parameters)
         options_layout.addWidget(QtGui.QWidget())
         list_parameters.setLayout(self.grid)
         description_status_layout = QtGui.QVBoxLayout(description_status_connect)
         status_connect = QtGui.QGroupBox(u'Статус подключения')
-        info_source_address = QtGui.QGroupBox(u'64-битный адрес источника')
-        info_destination_address = QtGui.QGroupBox(u'64-битный адрес назначения')
+        info_source_address = QtGui.QGroupBox(u'MAC-адрес подключенного модуля')
+        info_destination_address = QtGui.QGroupBox()
         description_status_layout.addWidget(status_connect)
         description_status_layout.addWidget(info_source_address, QtCore.Qt.AlignCenter)
         description_status_layout.addWidget(info_destination_address, QtCore.Qt.AlignCenter)
@@ -180,17 +227,18 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
 
     """ Парамметры подключения, для 1-ой вкладки"""
     def parameters_connecting(self):
-        com_lbl = QtGui.QLabel('COM')
+        com_lbl = QtGui.QLabel(u'COM порт')
         com_list = QtGui.QComboBox()
         com_list.setFixedWidth(80)
         com_list.addItems(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+        com_list.setCurrentIndex(3)
         self.grid.addWidget(com_list, 1, 1)
-        speed_lbl = QtGui.QLabel('Speed')
+        speed_lbl = QtGui.QLabel(u'Скорость передачи')
         speed_list = QtGui.QComboBox()
         speed_list.setFixedWidth(80)
         speed_list.addItems(["9600", "115200"])
         self.grid.addWidget(speed_list, 2, 1)
-        self.connecting_btn = QtGui.QPushButton(u"Соединение")
+        self.connecting_btn = QtGui.QPushButton(u"Открыть порт")
         self.close_port_btn = QtGui.QPushButton(u'Закрыть порт')
         self.grid.addWidget(self.close_port_btn, 7, 1)
         self.grid.addWidget(self.connecting_btn, 7, 0)
@@ -225,12 +273,15 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.comm_parameter_edit = QtGui.QLineEdit()
         self.comm_parameter_edit.setFixedWidth(80)
         send_commands_layout.addWidget(self.comm_parameter_edit, 3, 1)
-        self.addr_dest_lbl = QtGui.QLabel(u'Адрес назначения')
+        self.addr_dest_lbl = QtGui.QLabel(u'MAC-адрес назначения')
         self.addr_dest_edit = QtGui.QLineEdit()
         self.addr_dest_edit.setToolTip(u'Указывать в случае remote_at')
         self.addr_dest_edit.setFixedWidth(80)
+
         send_commands_layout.addWidget(self.addr_dest_lbl, 4, 0)
         send_commands_layout.addWidget(self.addr_dest_edit, 4, 1)
+
+
 
         """ Автодополнения команд начало """
         model = QtGui.QStringListModel()
@@ -242,8 +293,13 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         """ Автодополнения команд конец """
 
         self.send_command_btn = QtGui.QPushButton(u'Отправить')
+        self.test_label_edit = QtGui.QLineEdit()
+        send_commands_layout.addWidget(self.test_label_edit, 8, 0)
+        self.send_test_btn = QtGui.QPushButton(u'тест')
+        send_commands_layout.addWidget(self.send_test_btn, 7, 0)
         send_commands_layout.addWidget(self.send_command_btn, 5, 0)
         self.send_command_btn.clicked.connect(self.send_btn_clicked)
+        self.send_test_btn.clicked.connect(self.send_btn_test)
 
     """ Список доступных команд """
     def list_all_commands(self):
@@ -317,8 +373,10 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
                      self.update_network_structure, QtCore.Qt.QueuedConnection)
         self.connect(self.coor, QtCore.SIGNAL('ModuleConnected(QString)'),
                      self.connectionIndicate, QtCore.Qt.QueuedConnection)
+        """
         self.connect(self.coor, QtCore.SIGNAL('SendOperatingChannel(QString)'),
                      self.operating_channel_indicate, QtCore.Qt.QueuedConnection)
+                     """
         self.connect(self.coor, QtCore.SIGNAL('SendDestinationAddressHigh(QString)'),
                      self.dh_info_connecting_dev, QtCore.Qt.QueuedConnection)
         self.connect(self.coor, QtCore.SIGNAL('SendDestinationAddressLow(QString)'),
@@ -342,17 +400,61 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         _command = self.command_edit.text()
         _parameter = self.comm_parameter_edit.text()
         self.logMessage(_command)
-        self.coor.sendCommand(_type_command, _frame_id, _dest_addr, _command, _parameter)
+
+        if _type_command == 'at':
+            self.coor.sendATCommand(_type_command, _frame_id, _command, _parameter)
+        elif _type_command == 'remote_at':
+            self.coor.sendRemoteATCommand(_type_command, _frame_id, _dest_addr, _command, _parameter)
+        #elif _type_command == 'remote_at':
+            #self.coor.sendRemoteCommand(_type_command, _dest_addr, _frame_id, _command, _parameter)
+
+    def send_remote_at_clicked(self):
+        #_type_command5 = self.list_type_commands.currentText()
+        #_dest_address = self.addr_dest_edit.text()
+        #_frame_id1 = self.coor.current_frame_id
+        _command2 = self.command_edit.text()
+        #_parameter3 = self.comm_parameter_edit.text()
+        self.logMessage(_command2)
+        self.coor.sendRemoteCommand(_command2)
+
+    def send_id_command_clicked(self):
+        _parameter_id = self.pan_id_edit.text()
+        self.logMessage(_parameter_id)
+        self.coor.sendIDCommand(_parameter_id)
+
+    def send_ni_command_clicked(self):
+        _parameter_ni = self.name_edit.text()
+        self.logMessage(_parameter_ni)
+        self.coor.sendNICommand(_parameter_ni)
+
+    def send_jv_command_clicked(self):
+        _parameter_ni = self.channel_edit.text()
+        self.logMessage(_parameter_ni)
+        self.coor.sendJVCommand(_parameter_ni)
+
+    def send_btn_test(self):
+        _frame_id_remote = self.coor.current_frame_id
+        dest_address_v1 = self.test_label_edit.text()
+        command_v1_test = self.command_edit.text()
+        parameter_v1_test = self.comm_parameter_edit.text()
+        self.coor.sendTestCommand(_frame_id_remote,dest_address_v1, command_v1_test, parameter_v1_test)
 
     def on_update_network_btn_clicked(self):
         self.coor.sendNDCommand()
 
+    def save_settings_btn_clicked(self):
+        self.coor.sendWRCommand()
+
+    def default_settings_btn_clicked(self):
+        self.coor.sendRECommand()
+    """
     def operating_channel_indicate(self, channel):
         operating_channel_name_lbl = QtGui.QLabel(u"Рабочий канал: ")
         operating_channel_lbl = QtGui.QLabel()
         self.status_connect_layout.addWidget(operating_channel_name_lbl)
         self.status_connect_layout.addWidget(operating_channel_lbl)
         operating_channel_lbl.setText(channel)
+    """
 
     def dh_info_connecting_dev(self, DH):
         info_dh_lbl_name = QtGui.QLabel(u"Серийный номер(верхний): ")

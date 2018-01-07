@@ -8,7 +8,6 @@ import time
 from PyQt4 import QtCore
 import json
 import logging
-
 """
 установление соединения с модулем Xbee
 """
@@ -65,20 +64,21 @@ class XbeeConnect(QtCore.QThread):
             time.sleep(1)
             self.xbee.send('at', frame_id='A', command='VR')
             time.sleep(1)
-            self.xbee.send('at', frame_id='F', command='CH')
-            time.sleep(1)
+            #self.xbee.send('at', frame_id='F', command='CH')
+            #time.sleep(1)
             self.xbee.send('at', frame_id='B', command='SH')
             time.sleep(1)
             self.xbee.send('at', frame_id='c', command='SL')
-            time.sleep(1)
-            self.xbee.send('at', frame_id='D', command='DH')
-            time.sleep(1)
-            self.xbee.send('at', frame_id='E', command='DL')
+            #time.sleep(1)
+            #self.xbee.send('at', frame_id='D', command='DH')
+            #time.sleep(1)
+            #self.xbee.send('at', frame_id='E', command='DL')
     def closePort(self):
         self.ser.close()
         self.sendDataToForm(u"Порт закрыт")
 
-    def sendCommand(self, type_command, frame_id, destination_address, command, parameters):
+    """Отправка АТ команд"""
+    def sendATCommand(self, type_command, frame_id, command, parameters):
         type_command = str(type_command)
         if len(self.current_frame_id) == 0:
             frame_id = FRAME_ID_LIST[0]
@@ -87,14 +87,82 @@ class XbeeConnect(QtCore.QThread):
             frame_id = FRAME_ID_LIST[len(self.current_frame_id)]
             self.current_frame_id.append(frame_id)
             print self.current_frame_id
-        self.xbee.send(type_command, frame_id=frame_id, dest_adrr=str(destination_address), command=str(command), parameter=str(parameters))
+        self.xbee.send(type_command, frame_id=frame_id, command=str(command), parameter=str(parameters))
 
-    #def sendRemoteCommands(self, destination_address, command, parameter):
-        #self.xbee.remote_at(dest_addr=str(destination_address), command=str(command), parameter=str(command))
+    """Отправка Remote AT команд """
+    def sendRemoteATCommand(self, type_command, frame_id, destination_address, command, parameters):
+        type_command = str(type_command)
+        if len(self.current_frame_id) == 0:
+            frame_id = FRAME_ID_LIST[0]
+            self.current_frame_id.append(frame_id)
+        else:
+            frame_id = FRAME_ID_LIST[len(self.current_frame_id)]
+            self.current_frame_id.append(frame_id)
+            print self.current_frame_id
+        address = bytearray(self.formatAddress(str(destination_address).decode("hex")))
+        self.xbee.send(type_command, frame_id=frame_id, dest_addr_long=address, command=str(command), parameter=str(parameters))
+    """
+    def sendCommand(self, type_command, frame_id, command, parameters):
+        type_command = str(type_command)
+        if len(self.current_frame_id) == 0:
+            frame_id = FRAME_ID_LIST[0]
+            self.current_frame_id.append(frame_id)
+        else:
+            frame_id = FRAME_ID_LIST[len(self.current_frame_id)]
+            self.current_frame_id.append(frame_id)
+            print self.current_frame_id
+        self.xbee.send(type_command, frame_id=frame_id, command=str(command), parameter=str(parameters))
+    """
+    def sendRemoteCommand(self, command):
+        #address = bytearray(self.formatAddress(str(destination_address)))
+        #print address
+        address = '\x00\x13\xa2\x00\x40\xec\x3b\x11'
+        self.xbee.remote_at('remote_at', dest_addr_long=address, frame_id='T', command=str(command))
 
     def sendNDCommand(self):
         self.xbee.send('at', frame_id='A', command='ND')
 
+    def sendIDCommand(self, parameter):
+        parameter_newid = bytearray(self.formatParam(str(parameter).decode("hex")))
+        self.xbee.send('at', frame_id='L', command='ID', parameter=parameter_newid)
+        #time.sleep(2)
+        #self.xbee.send('at', frame_id='Z', command='WR')
+
+    def sendNICommand(self, parameter):
+        self.xbee.send('at', frame_id='H', command='NI', parameter=str(parameter))
+        #time.sleep(2)
+        #self.xbee.send('at', frame_id='M', command='WR')
+
+    def sendWRCommand(self):
+        self.xbee.send('at', frame_id='X', command='WR')
+
+    def sendRECommand(self):
+        self.xbee.send('at', frame_id='Q', command='RE')
+
+    def sendJVCommand(self, parameter1):
+        parameter_new = bytearray(self.formatParam(str(parameter1).decode("hex")))
+        self.xbee.send('at', frame_id='G', command='JV', parameter=parameter_new)
+        print parameter_new
+        #time.sleep(2)
+        #self.xbee.send('at', frame_id='M', command='WR')
+    """
+    def sendTestCommand(self, frame_id, dest_address_new, command_v1, parameter_v1):
+        address_1 = bytearray(self.formatAddress(str(dest_address_new).decode("hex")))
+        print address_1
+        #address_1 = dest_address_new.decode("hex")
+        #print address_1
+        #address_1 = self.xbee.set_dest_address(XBee.from_hex_string(dest_address_new))
+
+        if len(self.current_frame_id) == 0:
+            frame_id = FRAME_ID_LIST[0]
+            self.current_frame_id.append(frame_id)
+        else:
+            frame_id = FRAME_ID_LIST[len(self.current_frame_id)]
+            self.current_frame_id.append(frame_id)
+            print self.current_frame_id
+        self.xbee.send('remote_at', frame_id=frame_id, dest_addr_long=address_1, command=str(command_v1), parameter=str(parameter_v1))
+        print address_1
+    """
     def on_command_cb(self, data):
         command = data["command"]
         if command == "VR":
@@ -105,8 +173,8 @@ class XbeeConnect(QtCore.QThread):
             nd_response_json = json.dumps(nd_response_dict)
             self.sendNDResponse(nd_response_json)
             print nd_response_json
-        elif command == "CH":
-            self.operatingChannelInfo(data["parameter"].encode("hex"))
+        #elif command == "CH":
+            #self.operatingChannelInfo(data["parameter"].encode("hex"))
         elif command == "DH":
             self.DestinationAddressHighInfo(data["parameter"].encode("hex"))
         elif command == "DL":
@@ -126,11 +194,14 @@ class XbeeConnect(QtCore.QThread):
     def sendNDResponse(self, response):
         self.emit(QtCore.SIGNAL('SendNDResponse(QString)'), response)
 
+    def sendTESTResponse(self, response):
+        self.emit(QtCore.SIGNAL('SendNDResponse(QString)'), response)
+        print response
     def moduleConnected(self, response):
         self.emit(QtCore.SIGNAL('ModuleConnected(QString)'), response)
 
-    def operatingChannelInfo(self, response):
-        self.emit(QtCore.SIGNAL('SendOperatingChannel(QString)'), response)
+    #def operatingChannelInfo(self, response):
+        #self.emit(QtCore.SIGNAL('SendOperatingChannel(QString)'), response)
 
     def DestinationAddressHighInfo(self, response):
         self.emit(QtCore.SIGNAL('SendDestinationAddressHigh(QString)'), response)
@@ -149,6 +220,19 @@ class XbeeConnect(QtCore.QThread):
         self.emit(QtCore.SIGNAL('SerialNumberLow(QString)'), response)
         self.sendDataToForm(response)
         print response
+
+    def formatAddress(self, address):
+        newAddress = ""
+        for i in range(0, len(address) - 1, 2):
+            #newAddress += "\\x"
+            newAddress += address[i:i+2]
+        return newAddress
+
+    def formatParam(self, param):
+        newParam = ""
+        for i in range(0, len(param) - 0):
+            newParam += param[i:i+2]
+        return newParam
 
 class LVL():
     """
