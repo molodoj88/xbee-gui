@@ -190,10 +190,13 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
 
         self.save_settings_btn = QtGui.QPushButton(u'Сохранить')
         self.default_settings_btn = QtGui.QPushButton(u'Сбросить')
+        self.clear_btn = QtGui.QPushButton(u'Очистить')
+        self.clear_btn.clicked.connect(self.clear_btn_clicked)
         self.save_settings_btn.setFixedWidth(70)
         self.default_settings_btn.setFixedWidth(70)
         start_settings_layout.addWidget(self.save_settings_btn, 4, 0)
         start_settings_layout.addWidget(self.default_settings_btn, 4, 2)
+        start_settings_layout.addWidget(self.clear_btn, 5, 0)
         self.save_settings_btn.clicked.connect(self.save_settings_btn_clicked)
         self.default_settings_btn.clicked.connect(self.default_settings_btn_clicked)
         #list_commands_start_settings = QtGui.QWidget()
@@ -239,7 +242,9 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         speed_list.addItems(["9600", "115200"])
         self.grid.addWidget(speed_list, 2, 1)
         self.connecting_btn = QtGui.QPushButton(u"Открыть порт")
+        self.connecting_btn.setFixedWidth(90)
         self.close_port_btn = QtGui.QPushButton(u'Закрыть порт')
+        self.close_port_btn.setFixedWidth(90)
         self.grid.addWidget(self.close_port_btn, 7, 1)
         self.grid.addWidget(self.connecting_btn, 7, 0)
         self.grid.addWidget(com_lbl, 1, 0)
@@ -294,12 +299,12 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
 
         self.send_command_btn = QtGui.QPushButton(u'Отправить')
         self.test_label_edit = QtGui.QLineEdit()
-        send_commands_layout.addWidget(self.test_label_edit, 8, 0)
+        #send_commands_layout.addWidget(self.test_label_edit, 8, 0)
         self.send_test_btn = QtGui.QPushButton(u'тест')
-        send_commands_layout.addWidget(self.send_test_btn, 7, 0)
-        send_commands_layout.addWidget(self.send_command_btn, 5, 0)
+        #send_commands_layout.addWidget(self.send_test_btn, 7, 0)
+        #send_commands_layout.addWidget(self.send_command_btn, 5, 0)
         self.send_command_btn.clicked.connect(self.send_btn_clicked)
-        self.send_test_btn.clicked.connect(self.send_btn_test)
+        #self.send_test_btn.clicked.connect(self.send_btn_test)
 
     """ Список доступных команд """
     def list_all_commands(self):
@@ -504,6 +509,11 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
 
     def logMessage(self, text):
         logging.debug(text)
+
+    def clear_btn_clicked(self):
+        self.pan_id_edit.clear()
+        self.name_edit.clear()
+        self.channel_edit.clear()
 
     def contextMenuEvent(self, event):
         menu = QtGui.QMenu()
