@@ -512,7 +512,8 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.channel_edit.clear()
 
     def on_context_menu_pressed(self, pos):
-        self.logMessage(self.graphics_scene_items[self.scene.itemAt(pos)])
+        self.logMessage(self.graphics_scene_items[self.scene_view.itemAt(pos)])
+        self.logMessage(self.scene_view.items())
         win = ModalWind(self)
         win.show()
 
