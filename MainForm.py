@@ -316,13 +316,17 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.update_network_btn = QtGui.QPushButton(u"Обновить")
         self.update_network_btn.setFixedSize(60, 40)
         self.scene = QtGui.QGraphicsScene(parent=self.tab3)
-        self.scene_view = QtGui.QGraphicsView(self.scene)
+        self.scene_view = MyView(self.scene)
         self.scene_view_widget = QtGui.QVBoxLayout(self.tab3)
         self.scene_view_widget.addWidget(self.update_network_btn)
         self.scene_view_widget.addWidget(self.scene_view)
         self.connect(self.connecting_btn, QtCore.SIGNAL("clicked()"), lambda fields=self.connPrefFiels: self.readPrefs(fields))
         self.update_network_btn.clicked.connect(self.on_update_network_btn_clicked)
         self.tabWidget.currentChanged.connect(self.hide_log)
+        self.connect(self.scene_view, QtCore.SIGNAL("ContextMenuSignal(QPoint)"), self.on_context_menu_pressed, QtCore.Qt.QueuedConnection)
+
+    def print_coordinates(self, pos):
+        self.logMessage(str(pos))
 
     """ Логирование """
     def options_log(self):
@@ -452,14 +456,6 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
 
     def default_settings_btn_clicked(self):
         self.coor.sendRECommand()
-    """
-    def operating_channel_indicate(self, channel):
-        operating_channel_name_lbl = QtGui.QLabel(u"Рабочий канал: ")
-        operating_channel_lbl = QtGui.QLabel()
-        self.status_connect_layout.addWidget(operating_channel_name_lbl)
-        self.status_connect_layout.addWidget(operating_channel_lbl)
-        operating_channel_lbl.setText(channel)
-    """
 
     def dh_info_connecting_dev(self, DH):
         info_dh_lbl_name = QtGui.QLabel(u"Серийный номер(верхний): ")
@@ -498,13 +494,13 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         if addr in self.graphics_scene_items.values():
             return
         addr_item = QtGui.QGraphicsTextItem(addr, parent=None, scene=self.scene)
-        item = QtGui.QGraphicsPixmapItem(scene=self.scene)
-        self.graphics_scene_items[item] = addr
+        pixmap_item = QtGui.QGraphicsPixmapItem(scene=self.scene)
+        self.graphics_scene_items[pixmap_item] = addr
         if response_dict["device_type"] == "01":
-            item.setPixmap(QtGui.QPixmap('images/zr.png'))
+            pixmap_item.setPixmap(QtGui.QPixmap('images/zr.png'))
         if response_dict["device_type"] == "02":
-            item.setPixmap(QtGui.QPixmap('images/ze.png'))
-        item.setOffset(x, y)
+            pixmap_item.setPixmap(QtGui.QPixmap('images/ze.png'))
+        pixmap_item.setOffset(x, y)
         addr_item.setPos(x + 40, y + 50)
 
     def logMessage(self, text):
@@ -515,16 +511,28 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.name_edit.clear()
         self.channel_edit.clear()
 
+    def on_context_menu_pressed(self, pos):
+        self.logMessage(self.graphics_scene_items[self.scene.itemAt(pos)])
+        win = ModalWind(self)
+        win.show()
+
+
+class MyView(QtGui.QGraphicsView):
+    def __init__(self, *args, **kwargs):
+        super(MyView, self).__init__(*args, **kwargs)
+
     def contextMenuEvent(self, event):
         menu = QtGui.QMenu()
         settings_action = menu.addAction(u"Настройки")
         action = menu.exec_(event.globalPos())
         if action == settings_action:
-            self.on_show()
+            self.emit(QtCore.SIGNAL("ContextMenuSignal(QPoint)"), event.pos())
 
-    def on_show(self):
-        win = ModalWind(self)
-        win.show()
+
+class MyScene(QtGui.QGraphicsScene):
+    def __init__(self, *args, **kwargs):
+        super(MyScene, self).__init__(*args, **kwargs)
+
 
 class QTextEditLogger(logging.Handler):
     """
