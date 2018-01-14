@@ -26,36 +26,62 @@ for i in XbeeCommands.ALL_CLASSES:
 
 """Дополнительное окно для настроек удаленных устройств"""
 class ModalWind(QtGui.QWidget):
+
+    """Инициализация модального окна"""
     def __init__(self, parent=None):
         super(ModalWind, self).__init__(parent)
         self.setWindowFlags(QtCore.Qt.Dialog | QtCore.Qt.WindowSystemMenuHint)
         self.setWindowModality(QtCore.Qt.WindowModal)
-        self.setWindowTitle(u'Управление удаленным устройством')
+        self.setWindowTitle(u'Управление модулями Xbee')
         self.resize(550, 300)
+        self.main_window = mainWindow()
+
         self.send_remote_command_btn = QtGui.QPushButton(u'Отправить')
         modal_grid_widget = QtGui.QWidget()
         modal_layout = QtGui.QHBoxLayout(self)
         modal_grid = QtGui.QGridLayout(modal_grid_widget)
         modal_layout.addWidget(modal_grid_widget)
-        modal_grid.addWidget(self.send_remote_command_btn, 4, 0)
+        modal_grid.addWidget(self.send_remote_command_btn, 5, 0)
         remote_command_lbl = QtGui.QLabel(u'Команда')
         self.remote_command_edit = QtGui.QLineEdit()
-        remote_parameter_lbl = QtGui.QLabel(u'Параметр')
-        remote_parameter_edit = QtGui.QLineEdit()
+        self.remote_parameter_lbl = QtGui.QLabel(u'Параметр')
+        self.remote_parameter_edit = QtGui.QLineEdit()
         type_commands_lbl_mod = QtGui.QLabel(u'Тип команды')
         modal_grid.addWidget(type_commands_lbl_mod, 1, 0)
         self.list_type_commands_mod = QtGui.QComboBox()
         self.list_type_commands_mod.setFixedWidth(80)
         self.list_type_commands_mod.addItems(["at", "remote_at"])
+        self.remote_dest_addr_lbl = QtGui.QLabel(u'MAC-адрес')
+        self.remote_dest_add_edit = QtGui.QLineEdit()
+        modal_grid.addWidget(self.remote_dest_addr_lbl, 4, 0)
+        modal_grid.addWidget(self.remote_dest_add_edit, 4, 1)
         modal_grid.addWidget(self.list_type_commands_mod, 1, 1)
         modal_grid.addWidget(self.remote_command_edit, 2, 1, QtCore.Qt.AlignLeft)
-        modal_grid.addWidget(remote_parameter_lbl, 3, 0, QtCore.Qt.AlignLeft)
-        modal_grid.addWidget(remote_parameter_edit, 3, 1, QtCore.Qt.AlignLeft)
+        modal_grid.addWidget(self.remote_parameter_lbl, 3, 0, QtCore.Qt.AlignLeft)
+        modal_grid.addWidget(self.remote_parameter_edit, 3, 1, QtCore.Qt.AlignLeft)
         modal_grid.addWidget(remote_command_lbl, 2, 0, QtCore.Qt.AlignLeft)
         modal_right_widget = QtGui.QWidget()
         modal_layout.addWidget(modal_right_widget)
         modal_all_commands_widget = AllCommandsListWidget(self.remote_command_edit)
         modal_layout.addWidget(modal_all_commands_widget)
+
+        self.send_remote_command_btn.clicked.connect(self.send_remote_btn_clicked)
+
+    #TODO в модальном окне при отправке команды выдает ошибку AttributeError: 'NoneType' object has no attribute 'current_frame_id'
+    #TODO в классе ModalWind создал объект класса mainWindow и по идеи, класс ModalWind видит функции класса mainWindow но всеравно пишет что нет такого атрибута как frame_id, command и т.д.
+    def send_remote_btn_clicked(self):
+
+        _type_command = self.list_type_commands_mod.currentText()
+        _frame_id = self.main_window.coor.current_frame_id
+        _dest_addr = self.remote_dest_add_edit.text()
+        _command = self.remote_command_edit.text()
+        _parameter = self.remote_parameter_edit.text()
+        if _type_command == 'at':
+            self.main_window.coor.sendATCommand(_type_command, _frame_id, _command, _parameter)
+        elif _type_command == 'remote_at':
+            self.main_window.coor.sendRemoteATCommand(_type_command, _frame_id, _dest_addr, _command, _parameter)
+
+
 
 class AllCommandsListWidget(QtGui.QWidget):
     def __init__(self, command_edit, parent=None):
