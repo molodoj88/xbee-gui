@@ -214,9 +214,13 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         description_status_layout.addWidget(info_source_address, QtCore.Qt.AlignCenter)
         description_status_layout.addWidget(info_destination_address, QtCore.Qt.AlignCenter)
         self.status_connect_layout = QtGui.QHBoxLayout()
-        self.info_source_address_layout = QtGui.QGridLayout(info_source_address)
+        self.info_source_address_layout = QtGui.QHBoxLayout(info_source_address)
         self.info_destination_address_layout = QtGui.QGridLayout(info_destination_address)
         self.parameters_connecting()
+        self.info_sh_lbl_name = QtGui.QLabel(u"Серийный номер(верхний): ")
+        self.info_sl_lbl_name = QtGui.QLabel(u"Серийный номер(нижний): ")
+        #self.info_source_address_layout.addWidget(self.info_sh_lbl_name, 1, 0)
+        #self.info_source_address_layout.addWidget(self.info_sl_lbl_name, 2, 0)
 
         """Индикатор подключения"""
         self.conn_off_icon = QtGui.QPixmap('images/red_led.png')
@@ -241,9 +245,9 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         speed_list.setFixedWidth(80)
         speed_list.addItems(["9600", "115200"])
         self.grid.addWidget(speed_list, 2, 1)
-        self.connecting_btn = QtGui.QPushButton(u"Открыть порт")
+        self.connecting_btn = QtGui.QPushButton(u"Подключить")
         self.connecting_btn.setFixedWidth(90)
-        self.close_port_btn = QtGui.QPushButton(u'Закрыть порт')
+        self.close_port_btn = QtGui.QPushButton(u'Отключить')
         self.close_port_btn.setFixedWidth(90)
         self.grid.addWidget(self.close_port_btn, 7, 1)
         self.grid.addWidget(self.connecting_btn, 7, 0)
@@ -302,7 +306,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         #send_commands_layout.addWidget(self.test_label_edit, 8, 0)
         self.send_test_btn = QtGui.QPushButton(u'тест')
         #send_commands_layout.addWidget(self.send_test_btn, 7, 0)
-        #send_commands_layout.addWidget(self.send_command_btn, 5, 0)
+        send_commands_layout.addWidget(self.send_command_btn, 5, 0)
         self.send_command_btn.clicked.connect(self.send_btn_clicked)
         #self.send_test_btn.clicked.connect(self.send_btn_test)
 
@@ -359,10 +363,13 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.Icon_lbl.setText(module_type_dict[str(firmware[:2])])
         firm_id = str(firmware[:2])
         if firm_id == '21':
-            self.coord = QtGui.QPixmap('images/zc.png')
-            self.coor_item = QtGui.QGraphicsPixmapItem(self.coord, scene=self.scene)
-            self.coor_item.setOffset(100, 300)
-        self.labelForIcon.setPixmap(self.conn_on_icon)
+            self.labelForIcon.setPixmap(self.conn_on_icon)
+            #dest_addr_text = QtGui.QGraphicsTextItem('0013a20040ec3b03', parent=None, scene=self.scene)
+            #self.coord = QtGui.QPixmap('images/zc.png')
+            #self.coor_item = QtGui.QGraphicsPixmapItem(self.coord, scene=self.scene)
+            #self.coor_item.setOffset(100, 300)
+            #dest_addr_text.setPos(140, 350)
+
 
     """функция считавания значений и подключения модуля"""
     def readPrefs(self, fields):
@@ -401,6 +408,9 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
     def close_port_info(self):
         self.coor.closePort()
         self.labelForIcon.setPixmap(self.conn_off_icon)
+        self.info_sl_lbl.clear()
+        self.info_sh_lbl.clear()
+
 
     def send_btn_clicked(self):
         _type_command = self.list_type_commands.currentText()
@@ -458,44 +468,57 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.coor.sendRECommand()
 
     def dh_info_connecting_dev(self, DH):
-        info_dh_lbl_name = QtGui.QLabel(u"Серийный номер(верхний): ")
-        info_dh_lbl = QtGui.QLabel()
-        self.info_destination_address_layout.addWidget(info_dh_lbl_name, 1, 0)
-        self.info_destination_address_layout.addWidget(info_dh_lbl, 1, 1)
-        info_dh_lbl.setText(DH)
+        self.info_dh_lbl_name = QtGui.QLabel(u"Серийный номер(верхний): ")
+        self.info_dh_lbl = QtGui.QLabel()
+        self.info_destination_address_layout.addWidget(self.info_dh_lbl_name, 1, 0)
+        self.info_destination_address_layout.addWidget(self.info_dh_lbl, 1, 1)
+        self.info_dh_lbl.setText(DH)
 
     def dl_info_connecting_dev(self, DL):
-        info_dl_lbl_name = QtGui.QLabel(u"Серийный номер(нижний): ")
-        info_dl_lbl = QtGui.QLabel()
-        self.info_destination_address_layout.addWidget(info_dl_lbl_name, 2, 0)
-        self.info_destination_address_layout.addWidget(info_dl_lbl, 2, 1)
-        info_dl_lbl.setText(DL)
+        self.info_dl_lbl_name = QtGui.QLabel(u"Серийный номер(нижний): ")
+        self.info_dl_lbl = QtGui.QLabel()
+        self.info_destination_address_layout.addWidget(self.info_dl_lbl_name, 2, 0)
+        self.info_destination_address_layout.addWidget(self.info_dl_lbl, 2, 1)
+        self.info_dl_lbl.setText(DL)
 
     def sh_info_connecting_dev(self, SH):
-        info_dh_lbl_name = QtGui.QLabel(u"Серийный номер(верхний): ")
-        info_dh_lbl = QtGui.QLabel()
-        self.info_source_address_layout.addWidget(info_dh_lbl_name, 1, 0)
-        self.info_source_address_layout.addWidget(info_dh_lbl, 1, 1)
-        info_dh_lbl.setText(SH)
+
+        self.info_sh_lbl = QtGui.QLabel()
+
+        self.info_source_address_layout.addWidget(self.info_sh_lbl)
+        self.info_sh_lbl.setText(SH)
 
     def sl_info_connecting_dev(self, SL):
-        info_dl_lbl_name = QtGui.QLabel(u"Серийный номер(нижний): ")
-        info_dl_lbl = QtGui.QLabel()
-        self.info_source_address_layout.addWidget(info_dl_lbl_name, 2, 0)
-        self.info_source_address_layout.addWidget(info_dl_lbl, 2, 1)
-        info_dl_lbl.setText(SL)
+
+        self.info_sl_lbl = QtGui.QLabel()
+
+        self.info_source_address_layout.addWidget(self.info_sl_lbl)
+        self.info_sl_lbl.setText(SL)
+
+        #print self.info_sh_lbl.text() + self.info_sl_lbl.text()
 
     def update_network_structure(self, response):
         x = random.randrange(50, 800)
         y = random.randrange(50, 600)
         response_dict = json.loads(str(response))
         addr = response_dict['source_addr_long']
+        #dest_address = str('0013a20040ec3b03')
+        dest_address = self.info_sh_lbl.text() + self.info_sl_lbl.text()
+        #print self.info_sl_lbl.show()
         self.coor.sendDataToForm(addr)
+        self.coor.sendDataToForm(dest_address)
         if addr in self.graphics_scene_items.values():
             return
         addr_item = QtGui.QGraphicsTextItem(addr, parent=None, scene=self.scene)
+        dest_addrr_item = QtGui.QGraphicsTextItem(dest_address, parent=None, scene=self.scene)
+
+        new_pixmap_item = QtGui.QGraphicsPixmapItem(scene=self.scene)
         pixmap_item = QtGui.QGraphicsPixmapItem(scene=self.scene)
         self.graphics_scene_items[pixmap_item] = addr
+        self.graphics_scene_items[new_pixmap_item] = dest_address
+        new_pixmap_item.setPixmap(QtGui.QPixmap('images/zc.png'))
+        new_pixmap_item.setOffset(100, 300)
+        dest_addrr_item.setPos(130, 350)
         if response_dict["device_type"] == "01":
             pixmap_item.setPixmap(QtGui.QPixmap('images/zr.png'))
         if response_dict["device_type"] == "02":

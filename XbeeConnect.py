@@ -193,6 +193,7 @@ class XbeeConnect(QtCore.QThread):
 
     def sendNDResponse(self, response):
         self.emit(QtCore.SIGNAL('SendNDResponse(QString)'), response)
+        print response
 
     def sendTESTResponse(self, response):
         self.emit(QtCore.SIGNAL('SendNDResponse(QString)'), response)
