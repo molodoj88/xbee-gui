@@ -24,17 +24,19 @@ for i in XbeeCommands.ALL_CLASSES:
         commands.append(command)
         commands_dict[command] = i.__dict__.get(command)
 
-"""Дополнительное окно для настроек удаленных устройств"""
-class ModalWind(QtGui.QWidget):
 
+"""Дополнительное окно для настроек удаленных устройств"""
+
+
+class ModalWind(QtGui.QWidget):
     """Инициализация модального окна"""
-    def __init__(self, parent=None):
+    def __init__(self, main_window, parent=None):
         super(ModalWind, self).__init__(parent)
         self.setWindowFlags(QtCore.Qt.Dialog | QtCore.Qt.WindowSystemMenuHint)
         self.setWindowModality(QtCore.Qt.WindowModal)
         self.setWindowTitle(u'Управление модулями Xbee')
         self.resize(550, 300)
-        self.main_window = mainWindow()
+        self.main_window = main_window
 
         self.send_remote_command_btn = QtGui.QPushButton(u'Отправить')
         modal_grid_widget = QtGui.QWidget()
@@ -82,7 +84,6 @@ class ModalWind(QtGui.QWidget):
             self.main_window.coor.sendRemoteATCommand(_type_command, _frame_id, _dest_addr, _command, _parameter)
 
 
-
 class AllCommandsListWidget(QtGui.QWidget):
     def __init__(self, command_edit, parent=None):
         super(AllCommandsListWidget, self).__init__(parent)
@@ -107,7 +108,10 @@ class AllCommandsListWidget(QtGui.QWidget):
 
         self.connect(self.view, QtCore.SIGNAL("clicked(const QModelIndex&)"), on_item_clicked)
 
+
 """Главное окно"""
+
+
 class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
     "Инициализация основного окна и подключение всех элементов приложения"
     def __init__(self, parent=None):
@@ -126,7 +130,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.graphics_scene_items = dict()
 
     "Инициализация основного таба и 3х вкладок(подключение, управление, структура сети)"
-    def main_tab (self):
+    def main_tab(self):
         self.tabWidget = QtGui.QTabWidget()
         self.centralWidgetLayout = QtGui.QVBoxLayout(self.centralWidget)
         self.centralWidgetLayout.addWidget(self.tabWidget)
@@ -482,10 +486,13 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         dest_address_v1 = self.test_label_edit.text()
         command_v1_test = self.command_edit.text()
         parameter_v1_test = self.comm_parameter_edit.text()
-        self.coor.sendTestCommand(_frame_id_remote,dest_address_v1, command_v1_test, parameter_v1_test)
+        self.coor.sendTestCommand(_frame_id_remote, dest_address_v1, command_v1_test, parameter_v1_test)
 
     def on_update_network_btn_clicked(self):
-        self.coor.sendNDCommand()
+        try:
+            self.coor.sendNDCommand()
+        except AttributeError:
+            QtGui.QMessageBox.warning(self, u"Внимание", u"Необходимо подключить координатор")
 
     def save_settings_btn_clicked(self):
         self.coor.sendWRCommand()
@@ -561,10 +568,16 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.channel_edit.clear()
 
     def on_context_menu_pressed(self, pos):
-        self.logMessage(self.graphics_scene_items[self.scene_view.itemAt(pos)])
-        self.logMessage(self.scene_view.items())
-        win = ModalWind(self)
-        win.show()
+        try:
+            """
+            Если на сцене нет элементов, то и модальное окно открывать не нужно
+            """
+            self.logMessage(self.graphics_scene_items[self.scene_view.itemAt(pos)])
+            self.logMessage(self.scene_view.items())
+            win = ModalWind(self)
+            win.show()
+        except KeyError:
+            QtGui.QMessageBox.warning(self, u"Внимание", u"Необходимо подключить координатор")
 
 
 class MyView(QtGui.QGraphicsView):
@@ -603,6 +616,7 @@ def main():
     bl = mainWindow()
     bl.show()
     sys.exit(app.exec_())
+
 
 if __name__ == "__main__":
     main()
