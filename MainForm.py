@@ -36,7 +36,7 @@ class ModalWind(QtGui.QWidget):
         self.setWindowModality(QtCore.Qt.WindowModal)
         self.setWindowTitle(u'Управление модулями Xbee')
         self.resize(550, 300)
-        self.main_window = main_window
+        self.mainWindow = main_window
 
         self.send_remote_command_btn = QtGui.QPushButton(u'Отправить')
         modal_grid_widget = QtGui.QWidget()
@@ -55,6 +55,7 @@ class ModalWind(QtGui.QWidget):
         self.list_type_commands_mod.addItems(["at", "remote_at"])
         self.remote_dest_addr_lbl = QtGui.QLabel(u'MAC-адрес')
         self.remote_dest_add_edit = QtGui.QLineEdit()
+        self.remote_dest_add_edit.setText(self.mainWindow.addr)
         modal_grid.addWidget(self.remote_dest_addr_lbl, 4, 0)
         modal_grid.addWidget(self.remote_dest_add_edit, 4, 1)
         modal_grid.addWidget(self.list_type_commands_mod, 1, 1)
@@ -74,14 +75,14 @@ class ModalWind(QtGui.QWidget):
     def send_remote_btn_clicked(self):
 
         _type_command = self.list_type_commands_mod.currentText()
-        _frame_id = self.main_window.coor.current_frame_id
+        _frame_id = self.mainWindow.coor.current_frame_id
         _dest_addr = self.remote_dest_add_edit.text()
         _command = self.remote_command_edit.text()
         _parameter = self.remote_parameter_edit.text()
         if _type_command == 'at':
-            self.main_window.coor.sendATCommand(_type_command, _frame_id, _command, _parameter)
+            self.mainWindow.coor.sendATCommand(_type_command, _frame_id, _command, _parameter)
         elif _type_command == 'remote_at':
-            self.main_window.coor.sendRemoteATCommand(_type_command, _frame_id, _dest_addr, _command, _parameter)
+            self.mainWindow.coor.sendRemoteATCommand(_type_command, _frame_id, _dest_addr, _command, _parameter)
 
 
 class AllCommandsListWidget(QtGui.QWidget):
@@ -534,20 +535,20 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         x = random.randrange(50, 800)
         y = random.randrange(50, 600)
         response_dict = json.loads(str(response))
-        addr = response_dict['source_addr_long']
+        self.addr = response_dict['source_addr_long']
         #dest_address = str('0013a20040ec3b03')
         dest_address = self.info_sh_lbl.text() + self.info_sl_lbl.text()
         #print self.info_sl_lbl.show()
-        self.coor.sendDataToForm(addr)
+        self.coor.sendDataToForm(self.addr)
         self.coor.sendDataToForm(dest_address)
-        if addr in self.graphics_scene_items.values():
+        if self.addr in self.graphics_scene_items.values():
             return
-        addr_item = QtGui.QGraphicsTextItem(addr, parent=None, scene=self.scene)
+        self.addr_item = QtGui.QGraphicsTextItem(self.addr, parent=None, scene=self.scene)
         dest_addrr_item = QtGui.QGraphicsTextItem(dest_address, parent=None, scene=self.scene)
 
         new_pixmap_item = QtGui.QGraphicsPixmapItem(scene=self.scene)
         pixmap_item = QtGui.QGraphicsPixmapItem(scene=self.scene)
-        self.graphics_scene_items[pixmap_item] = addr
+        self.graphics_scene_items[pixmap_item] = self.addr
         self.graphics_scene_items[new_pixmap_item] = dest_address
         new_pixmap_item.setPixmap(QtGui.QPixmap('images/zc.png'))
         new_pixmap_item.setOffset(100, 300)
@@ -557,7 +558,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         if response_dict["device_type"] == "02":
             pixmap_item.setPixmap(QtGui.QPixmap('images/ze.png'))
         pixmap_item.setOffset(x, y)
-        addr_item.setPos(x + 40, y + 50)
+        self.addr_item.setPos(x + 40, y + 50)
 
     def logMessage(self, text):
         logging.debug(text)
