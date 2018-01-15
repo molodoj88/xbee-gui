@@ -574,7 +574,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
             """
             self.logMessage(self.graphics_scene_items[self.scene_view.itemAt(pos)])
             self.logMessage(self.scene_view.items())
-            win = ModalWind(self)
+            win = ModalWind(self, parent=self)
             win.show()
         except KeyError:
             QtGui.QMessageBox.warning(self, u"Внимание", u"Необходимо подключить координатор")
