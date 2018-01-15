@@ -68,10 +68,16 @@ class ModalWind(QtGui.QWidget):
         modal_all_commands_widget = AllCommandsListWidget(self.remote_command_edit)
         modal_layout.addWidget(modal_all_commands_widget)
 
+        #TODO Задумка следующая:
+        #TODO После нажатия на кнопку настройки(вызов диалогового окна), по месту где распложено устройство, например по роутеру
+        #TODO то по умолчанию выставлялось сразу тип команды remote_at, а например если нажимаем по координатору, то тип команды менялся на at и убиралось поле mac-адрес
+        #TODO Проблема в том, на каком этапе сделать проверку и как, чтоб по нажатию на настройки определялялось по чему был клик в нашем случае либо координотор либо роутер
+        #TODO что-то наподобие написал условие ниже
+        if self.mainWindow.response_dict["device_type"] == "01":
+            self.list_type_commands_mod.setCurrentIndex(1)
+
         self.send_remote_command_btn.clicked.connect(self.send_remote_btn_clicked)
 
-    #TODO в модальном окне при отправке команды выдает ошибку AttributeError: 'NoneType' object has no attribute 'current_frame_id'
-    #TODO в классе ModalWind создал объект класса mainWindow и по идеи, класс ModalWind видит функции класса mainWindow но всеравно пишет что нет такого атрибута как frame_id, command и т.д.
     def send_remote_btn_clicked(self):
 
         _type_command = self.list_type_commands_mod.currentText()
@@ -534,8 +540,9 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
     def update_network_structure(self, response):
         x = random.randrange(50, 800)
         y = random.randrange(50, 600)
-        response_dict = json.loads(str(response))
-        self.addr = response_dict['source_addr_long']
+        self.response_dict = json.loads(str(response))
+        print self.response_dict
+        self.addr = self.response_dict['source_addr_long']
         #dest_address = str('0013a20040ec3b03')
         dest_address = self.info_sh_lbl.text() + self.info_sl_lbl.text()
         #print self.info_sl_lbl.show()
@@ -553,9 +560,9 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         new_pixmap_item.setPixmap(QtGui.QPixmap('images/zc.png'))
         new_pixmap_item.setOffset(100, 300)
         dest_addrr_item.setPos(130, 350)
-        if response_dict["device_type"] == "01":
+        if self.response_dict["device_type"] == "01":
             pixmap_item.setPixmap(QtGui.QPixmap('images/zr.png'))
-        if response_dict["device_type"] == "02":
+        if self.response_dict["device_type"] == "02":
             pixmap_item.setPixmap(QtGui.QPixmap('images/ze.png'))
         pixmap_item.setOffset(x, y)
         self.addr_item.setPos(x + 40, y + 50)
