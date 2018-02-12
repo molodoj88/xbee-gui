@@ -274,7 +274,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         com_lbl = QtGui.QLabel(u'COM порт')
         com_list = QtGui.QComboBox()
         com_list.setFixedWidth(80)
-        com_list.addItems(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+        com_list.addItems([str(x) for x in range(1, 20)])
         com_list.setCurrentIndex(3)
         self.grid.addWidget(com_list, 1, 1)
         speed_lbl = QtGui.QLabel(u'Скорость передачи')

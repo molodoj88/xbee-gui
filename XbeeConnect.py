@@ -164,28 +164,38 @@ class XbeeConnect(QtCore.QThread):
         print address_1
     """
     def on_command_cb(self, data):
+        print "Response received"
         command = data["command"]
-        if command == "VR":
-            self.moduleConnected(data['parameter'].encode("hex"))
-        elif command == "ND":
-            response_list = ['source_addr', 'device_type', 'source_addr_long']
-            nd_response_dict = {key: data["parameter"][key].encode("hex") for key in response_list}
-            nd_response_json = json.dumps(nd_response_dict)
-            self.sendNDResponse(nd_response_json)
-            print nd_response_json
-        #elif command == "CH":
-            #self.operatingChannelInfo(data["parameter"].encode("hex"))
-        elif command == "DH":
-            self.DestinationAddressHighInfo(data["parameter"].encode("hex"))
-        elif command == "DL":
-            self.DestinationAddressLowInfo(data["parameter"].encode("hex"))
-        elif command == "SH":
-            self.SerialNumberHighInfo(data["parameter"].encode("hex"))
-        elif command == "SL":
-            self.SerialNumberLowInfo(data["parameter"].encode("hex"))
-        else:
-            print data
-            self.sendResponse(json.dumps(data))
+        try:
+            if command == "VR":
+                self.moduleConnected(data['parameter'].encode("hex"))
+            elif command == "ND":
+                response_list = ['source_addr', 'device_type', 'source_addr_long']
+                nd_response_dict = {key: data["parameter"][key].encode("hex") for key in response_list}
+                nd_response_json = json.dumps(nd_response_dict)
+                self.sendNDResponse(nd_response_json)
+                print nd_response_json
+            elif command == "DH":
+                self.DestinationAddressHighInfo(data["parameter"].encode("hex"))
+            elif command == "DL":
+                self.DestinationAddressLowInfo(data["parameter"].encode("hex"))
+            elif command == "SH":
+                self.SerialNumberHighInfo(data["parameter"].encode("hex"))
+            elif command == "SL":
+                self.SerialNumberLowInfo(data["parameter"].encode("hex"))
+            elif command == "DB":
+                dbm = ord(data["parameter"])
+                p = 10 ** (-dbm / 10)
+                print u"Мощность последнего принятого пакета: {} мВт".format(p)
+            else:
+                print data
+                #self.sendResponse(json.dumps(data))
+        except Exception as e:
+            print e
+        finally:
+            current_id = data["frame_id"]
+            print "current id: {}".format(current_id)
+            self.current_frame_id.remove(current_id)
 
     def sendResponse(self, response):
         self.emit(QtCore.SIGNAL('SendResponse(QString)'), response)
