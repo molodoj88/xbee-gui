@@ -269,12 +269,12 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.status_connect_layout.addWidget(self.labelForIcon)
         status_connect.setLayout(self.status_connect_layout)
 
-    """ Парамметры подключения, для 1-ой вкладки"""
+    """ Параметры подключения, для 1-ой вкладки"""
     def parameters_connecting(self):
         com_lbl = QtGui.QLabel(u'COM порт')
         com_list = QtGui.QComboBox()
         com_list.setFixedWidth(80)
-        com_list.addItems(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+        com_list.addItems([str(x) for x in range(1, 20)])
         com_list.setCurrentIndex(3)
         self.grid.addWidget(com_list, 1, 1)
         speed_lbl = QtGui.QLabel(u'Скорость передачи')
@@ -352,8 +352,10 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.tab2_all_commands_widget = AllCommandsListWidget(self.command_edit)
         self.list_commands_layout.addWidget(self.tab2_all_commands_widget)
 
-    """Вкладка структура сети)"""
+    """Вкладка структура сети"""
     def tab_network_structure(self):
+        # TODO закончить с добавлением модулей в общий словарь
+        self.modules = dict()
         self.update_network_btn = QtGui.QPushButton(u"Обновить")
         self.update_network_btn.setFixedSize(60, 40)
         self.scene = QtGui.QGraphicsScene(parent=self.tab3)
@@ -361,22 +363,21 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.scene_view_widget = QtGui.QVBoxLayout(self.tab3)
         self.scene_view_widget.addWidget(self.update_network_btn)
         self.scene_view_widget.addWidget(self.scene_view)
-        self.connect(self.connecting_btn, QtCore.SIGNAL("clicked()"), lambda fields=self.connPrefFiels: self.readPrefs(fields))
+        self.connect(self.connecting_btn, QtCore.SIGNAL("clicked()"),
+                     lambda fields=self.connPrefFiels: self.readPrefs(fields))
         self.update_network_btn.clicked.connect(self.on_update_network_btn_clicked)
         self.tabWidget.currentChanged.connect(self.hide_log)
-        self.connect(self.scene_view, QtCore.SIGNAL("ContextMenuSignal(QPoint)"), self.on_context_menu_pressed, QtCore.Qt.QueuedConnection)
+        self.connect(self.scene_view, QtCore.SIGNAL("ContextMenuSignal(QPoint)"),
+                     self.on_context_menu_pressed, QtCore.Qt.QueuedConnection)
 
-    def print_coordinates(self, pos):
-        self.logMessage(str(pos))
-
-    """ Логирование """
     def options_log(self):
+        # Логирование
         self.logWidget = QTextEditLogger(self)
         self.logWidget.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', "%Y-%m-%d %H:%M:%S"))
         logging.getLogger().addHandler(self.logWidget)
         logging.getLogger().setLevel(logging.DEBUG)
 
-        """Сохранение логов в файл"""
+        # Сохранение логов в файл
         name_file_log = logging.FileHandler('test.log')
         name_file_log.setLevel(logging.DEBUG)
         ch = logging.StreamHandler()
@@ -395,21 +396,15 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         else:
             self.logWidget.widget.setVisible(True)
 
-    """Функция индикации подключения и вывод версии прошивки"""
     def connectionIndicate(self, firmware):
+        # Функция индикации подключения и вывод версии прошивки
         self.Icon_lbl.setText(module_type_dict[str(firmware[:2])])
         firm_id = str(firmware[:2])
         if firm_id == '21':
             self.labelForIcon.setPixmap(self.conn_on_icon)
-            #dest_addr_text = QtGui.QGraphicsTextItem('0013a20040ec3b03', parent=None, scene=self.scene)
-            #self.coord = QtGui.QPixmap('images/zc.png')
-            #self.coor_item = QtGui.QGraphicsPixmapItem(self.coord, scene=self.scene)
-            #self.coor_item.setOffset(100, 300)
-            #dest_addr_text.setPos(140, 350)
 
-
-    """функция считавания значений и подключения модуля"""
     def readPrefs(self, fields):
+        # функция считавания значений и подключения модуля
         self.connPrefs = []
         for i in fields:
             item = i.itemText(i.currentIndex())
@@ -441,13 +436,12 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.coor.start()
         self.connect(self.close_port_btn, QtCore.SIGNAL("clicked()"), self.close_port_info)
 
-    "Функция закрытия com порта"
     def close_port_info(self):
+        # Функция закрытия com порта
         self.coor.closePort()
         self.labelForIcon.setPixmap(self.conn_off_icon)
         self.info_sl_lbl.clear()
         self.info_sh_lbl.clear()
-
 
     def send_btn_clicked(self):
         _type_command = self.list_type_commands.currentText()
@@ -535,24 +529,20 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.info_source_address_layout.addWidget(self.info_sl_lbl)
         self.info_sl_lbl.setText(SL)
 
-        #print self.info_sh_lbl.text() + self.info_sl_lbl.text()
-
     def update_network_structure(self, response):
+        # Срабатывает при нажатии кнопки обновления карты сети
         x = random.randrange(50, 800)
         y = random.randrange(50, 600)
         self.response_dict = json.loads(str(response))
         print self.response_dict
         self.addr = self.response_dict['source_addr_long']
-        #dest_address = str('0013a20040ec3b03')
         dest_address = self.info_sh_lbl.text() + self.info_sl_lbl.text()
-        #print self.info_sl_lbl.show()
         self.coor.sendDataToForm(self.addr)
         self.coor.sendDataToForm(dest_address)
         if self.addr in self.graphics_scene_items.values():
             return
         self.addr_item = QtGui.QGraphicsTextItem(self.addr, parent=None, scene=self.scene)
         dest_addrr_item = QtGui.QGraphicsTextItem(dest_address, parent=None, scene=self.scene)
-
         new_pixmap_item = QtGui.QGraphicsPixmapItem(scene=self.scene)
         pixmap_item = QtGui.QGraphicsPixmapItem(scene=self.scene)
         self.graphics_scene_items[pixmap_item] = self.addr
@@ -577,14 +567,13 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
 
     def on_context_menu_pressed(self, pos):
         try:
-            """
-            Если на сцене нет элементов, то и модальное окно открывать не нужно
-            """
+            # Пробуем открыть окно, если попали на устройство мышкой
             self.logMessage(self.graphics_scene_items[self.scene_view.itemAt(pos)])
             self.logMessage(self.scene_view.items())
             win = ModalWind(self, parent=self)
             win.show()
         except KeyError:
+            # Если на сцене ничего нет, то вызываем диалоговое окно
             QtGui.QMessageBox.warning(self, u"Внимание", u"Необходимо подключить координатор")
 
 
