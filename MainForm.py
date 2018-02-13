@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 import sys
 from PyQt4 import QtGui, QtCore
-import datetime
 from XbeeConnect import XbeeConnect
 import logging
 import XbeeCommands
 import random
 import json
-from time import sleep
 
 module_type_dict = {'20': 'ZigBee Coordinator AT',
                     '21': 'ZigBee Coordinator API',
@@ -24,9 +22,7 @@ for i in XbeeCommands.ALL_CLASSES:
         commands.append(command)
         commands_dict[command] = i.__dict__.get(command)
 
-
 """Дополнительное окно для настроек удаленных устройств"""
-
 
 class ModalWind(QtGui.QWidget):
     """Инициализация модального окна"""
@@ -117,7 +113,6 @@ class AllCommandsListWidget(QtGui.QWidget):
 
 
 """Главное окно"""
-
 
 class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
     "Инициализация основного окна и подключение всех элементов приложения"
@@ -236,8 +231,6 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         start_settings_layout.addWidget(self.clear_btn, 5, 0)
         self.save_settings_btn.clicked.connect(self.save_settings_btn_clicked)
         self.default_settings_btn.clicked.connect(self.default_settings_btn_clicked)
-        #list_commands_start_settings = QtGui.QWidget()
-        #start_settings_layout.addWidget(list_commands_start_settings)
 
         list_parameters = QtGui.QWidget()
         options_layout.addWidget(list_parameters)
@@ -256,8 +249,6 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.parameters_connecting()
         self.info_sh_lbl_name = QtGui.QLabel(u"Серийный номер(верхний): ")
         self.info_sl_lbl_name = QtGui.QLabel(u"Серийный номер(нижний): ")
-        #self.info_source_address_layout.addWidget(self.info_sh_lbl_name, 1, 0)
-        #self.info_source_address_layout.addWidget(self.info_sl_lbl_name, 2, 0)
 
         """Индикатор подключения"""
         self.conn_off_icon = QtGui.QPixmap('images/red_led.png')
@@ -340,12 +331,10 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
 
         self.send_command_btn = QtGui.QPushButton(u'Отправить')
         self.test_label_edit = QtGui.QLineEdit()
-        #send_commands_layout.addWidget(self.test_label_edit, 8, 0)
         self.send_test_btn = QtGui.QPushButton(u'тест')
-        #send_commands_layout.addWidget(self.send_test_btn, 7, 0)
         send_commands_layout.addWidget(self.send_command_btn, 5, 0)
         self.send_command_btn.clicked.connect(self.send_btn_clicked)
-        #self.send_test_btn.clicked.connect(self.send_btn_test)
+
 
     """ Список доступных команд """
     def list_all_commands(self):
@@ -401,11 +390,6 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         firm_id = str(firmware[:2])
         if firm_id == '21':
             self.labelForIcon.setPixmap(self.conn_on_icon)
-            #dest_addr_text = QtGui.QGraphicsTextItem('0013a20040ec3b03', parent=None, scene=self.scene)
-            #self.coord = QtGui.QPixmap('images/zc.png')
-            #self.coor_item = QtGui.QGraphicsPixmapItem(self.coord, scene=self.scene)
-            #self.coor_item.setOffset(100, 300)
-            #dest_addr_text.setPos(140, 350)
 
 
     """функция считавания значений и подключения модуля"""
@@ -461,15 +445,9 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
             self.coor.sendATCommand(_type_command, _frame_id, _command, _parameter)
         elif _type_command == 'remote_at':
             self.coor.sendRemoteATCommand(_type_command, _frame_id, _dest_addr, _command, _parameter)
-        #elif _type_command == 'remote_at':
-            #self.coor.sendRemoteCommand(_type_command, _dest_addr, _frame_id, _command, _parameter)
 
     def send_remote_at_clicked(self):
-        #_type_command5 = self.list_type_commands.currentText()
-        #_dest_address = self.addr_dest_edit.text()
-        #_frame_id1 = self.coor.current_frame_id
         _command2 = self.command_edit.text()
-        #_parameter3 = self.comm_parameter_edit.text()
         self.logMessage(_command2)
         self.coor.sendRemoteCommand(_command2)
 
@@ -535,17 +513,13 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.info_source_address_layout.addWidget(self.info_sl_lbl)
         self.info_sl_lbl.setText(SL)
 
-        #print self.info_sh_lbl.text() + self.info_sl_lbl.text()
-
     def update_network_structure(self, response):
         x = random.randrange(50, 800)
         y = random.randrange(50, 600)
         self.response_dict = json.loads(str(response))
         print self.response_dict
         self.addr = self.response_dict['source_addr_long']
-        #dest_address = str('0013a20040ec3b03')
         dest_address = self.info_sh_lbl.text() + self.info_sl_lbl.text()
-        #print self.info_sl_lbl.show()
         self.coor.sendDataToForm(self.addr)
         self.coor.sendDataToForm(dest_address)
         if self.addr in self.graphics_scene_items.values():
@@ -585,7 +559,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
             win = ModalWind(self, parent=self)
             win.show()
         except KeyError:
-            QtGui.QMessageBox.warning(self, u"Внимание", u"Необходимо подключить координатор")
+            QtGui.QMessageBox.warning(self, u"Внимание", u"Элементов не найдено")
 
 
 class MyView(QtGui.QGraphicsView):
