@@ -113,6 +113,10 @@ class XbeeConnect(QtCore.QThread):
     def sendWRCommand(self):
         self.xbee.send('at', frame_id='X', command='WR')
 
+    def sendMYCommand(self, type_command):
+        type_command = str(type_command)
+        self.xbee.send(type_command, frame_id='P', command='MY')
+
     def sendRECommand(self):
         self.xbee.send('at', frame_id='Q', command='RE')
 
@@ -135,6 +139,9 @@ class XbeeConnect(QtCore.QThread):
                 print nd_response_json
             elif command == "DH":
                 self.DestinationAddressHighInfo(data["parameter"].encode("hex"))
+            elif command == "MY":
+                self.my_responce_dict = data["id"]
+                print self.my_responce_dict
             elif command == "DL":
                 self.DestinationAddressLowInfo(data["parameter"].encode("hex"))
             elif command == "SH":
@@ -162,6 +169,10 @@ class XbeeConnect(QtCore.QThread):
         self.emit(QtCore.SIGNAL('SendNDResponse(QString)'), response)
         print response
 
+    #def sendMYResponse(self, response):
+        #self.emit(QtCore.SIGNAL('SendMYResponse(QString)'), response)
+        #print response
+
     def sendTESTResponse(self, response):
         self.emit(QtCore.SIGNAL('SendNDResponse(QString)'), response)
         print response
@@ -179,6 +190,7 @@ class XbeeConnect(QtCore.QThread):
     def SerialNumberHighInfo(self, response):
         self.emit(QtCore.SIGNAL('SerialNumberHigh(QString)'), response)
         self.sendDataToForm(response)
+
         print response
 
     def SerialNumberLowInfo(self, response):

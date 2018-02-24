@@ -51,7 +51,7 @@ class ModalWind(QtGui.QWidget):
         self.list_type_commands_mod.addItems(["at", "remote_at"])
         self.remote_dest_addr_lbl = QtGui.QLabel(u'MAC-адрес')
         self.remote_dest_add_edit = QtGui.QLineEdit()
-        self.remote_dest_add_edit.setText(self.mainWindow.addr)
+        self.remote_dest_add_edit.setText(self.mainWindow.address_for_send_command)
         modal_grid.addWidget(self.remote_dest_addr_lbl, 4, 0)
         modal_grid.addWidget(self.remote_dest_add_edit, 4, 1)
         modal_grid.addWidget(self.list_type_commands_mod, 1, 1)
@@ -69,22 +69,23 @@ class ModalWind(QtGui.QWidget):
         #TODO то по умолчанию выставлялось сразу тип команды remote_at, а например если нажимаем по координатору, то тип команды менялся на at и убиралось поле mac-адрес
         #TODO Проблема в том, на каком этапе сделать проверку и как, чтоб по нажатию на настройки определялялось по чему был клик в нашем случае либо координотор либо роутер
         #TODO что-то наподобие написал условие ниже
-        if self.mainWindow.response_dict["device_type"] == "01":
-            self.list_type_commands_mod.setCurrentIndex(1)
+
+        #if self.mainWindow.response_dict["device_type"] == "01":
+            #self.list_type_commands_mod.setCurrentIndex(1)
 
         self.send_remote_command_btn.clicked.connect(self.send_remote_btn_clicked)
 
     def send_remote_btn_clicked(self):
 
-        _type_command = self.list_type_commands_mod.currentText()
+        self._type_command = self.list_type_commands_mod.currentText()
         _frame_id = self.mainWindow.coor.current_frame_id
         _dest_addr = self.remote_dest_add_edit.text()
         _command = self.remote_command_edit.text()
         _parameter = self.remote_parameter_edit.text()
-        if _type_command == 'at':
-            self.mainWindow.coor.sendATCommand(_type_command, _frame_id, _command, _parameter)
-        elif _type_command == 'remote_at':
-            self.mainWindow.coor.sendRemoteATCommand(_type_command, _frame_id, _dest_addr, _command, _parameter)
+        if self._type_command == 'at':
+            self.mainWindow.coor.sendATCommand(self._type_command, _frame_id, _command, _parameter)
+        elif self._type_command == 'remote_at':
+            self.mainWindow.coor.sendRemoteATCommand(self._type_command, _frame_id, _dest_addr, _command, _parameter)
 
 
 class AllCommandsListWidget(QtGui.QWidget):
@@ -119,6 +120,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
     def __init__(self, parent=None):
         super(mainWindow, self).__init__(parent)
         QtGui.QWidget.__init__(self, parent)
+        self.modal_window = ModalWind
         self.centralWidget = QtGui.QWidget()
         self.setCentralWidget(self.centralWidget)
         self.resize(800, 600)
@@ -341,11 +343,12 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.tab2_all_commands_widget = AllCommandsListWidget(self.command_edit)
         self.list_commands_layout.addWidget(self.tab2_all_commands_widget)
 
-    """Вкладка структура сети)"""
+    """Вкладка структура сети"""
     def tab_network_structure(self):
         self.update_network_btn = QtGui.QPushButton(u"Обновить")
         self.update_network_btn.setFixedSize(60, 40)
         self.scene = QtGui.QGraphicsScene(parent=self.tab3)
+
         self.scene_view = MyView(self.scene)
         self.scene_view_widget = QtGui.QVBoxLayout(self.tab3)
         self.scene_view_widget.addWidget(self.update_network_btn)
@@ -410,10 +413,6 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
                      self.update_network_structure, QtCore.Qt.QueuedConnection)
         self.connect(self.coor, QtCore.SIGNAL('ModuleConnected(QString)'),
                      self.connectionIndicate, QtCore.Qt.QueuedConnection)
-        """
-        self.connect(self.coor, QtCore.SIGNAL('SendOperatingChannel(QString)'),
-                     self.operating_channel_indicate, QtCore.Qt.QueuedConnection)
-                     """
         self.connect(self.coor, QtCore.SIGNAL('SendDestinationAddressHigh(QString)'),
                      self.dh_info_connecting_dev, QtCore.Qt.QueuedConnection)
         self.connect(self.coor, QtCore.SIGNAL('SendDestinationAddressLow(QString)'),
@@ -431,6 +430,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.labelForIcon.setPixmap(self.conn_off_icon)
         self.info_sl_lbl.clear()
         self.info_sh_lbl.clear()
+        self.scene.clear()
 
 
     def send_btn_clicked(self):
@@ -517,23 +517,25 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         x = random.randrange(50, 800)
         y = random.randrange(50, 600)
         self.response_dict = json.loads(str(response))
-        print self.response_dict
+        #print self.response_dict
         self.addr = self.response_dict['source_addr_long']
-        dest_address = self.info_sh_lbl.text() + self.info_sl_lbl.text()
+        self.dest_address = self.info_sh_lbl.text() + self.info_sl_lbl.text()
         self.coor.sendDataToForm(self.addr)
-        self.coor.sendDataToForm(dest_address)
-        if self.addr in self.graphics_scene_items.values():
-            return
+        self.coor.sendDataToForm(self.dest_address)
+        #if self.addr in self.graphics_scene_items.values():
+            #return
         self.addr_item = QtGui.QGraphicsTextItem(self.addr, parent=None, scene=self.scene)
-        dest_addrr_item = QtGui.QGraphicsTextItem(dest_address, parent=None, scene=self.scene)
 
+        self.dest_addrr_item = QtGui.QGraphicsTextItem(self.dest_address, parent=None, scene=self.scene)
+        if self.dest_address in self.graphics_scene_items.values():
+            return
         new_pixmap_item = QtGui.QGraphicsPixmapItem(scene=self.scene)
         pixmap_item = QtGui.QGraphicsPixmapItem(scene=self.scene)
         self.graphics_scene_items[pixmap_item] = self.addr
-        self.graphics_scene_items[new_pixmap_item] = dest_address
+        self.graphics_scene_items[new_pixmap_item] = self.dest_address
         new_pixmap_item.setPixmap(QtGui.QPixmap('images/zc.png'))
         new_pixmap_item.setOffset(100, 300)
-        dest_addrr_item.setPos(130, 350)
+        self.dest_addrr_item.setPos(130, 350)
         if self.response_dict["device_type"] == "01":
             pixmap_item.setPixmap(QtGui.QPixmap('images/zr.png'))
         if self.response_dict["device_type"] == "02":
@@ -554,8 +556,12 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
             """
             Если на сцене нет элементов, то и модальное окно открывать не нужно
             """
-            self.logMessage(self.graphics_scene_items[self.scene_view.itemAt(pos)])
-            self.logMessage(self.scene_view.items())
+            self.address_for_send_command = self.graphics_scene_items[self.scene_view.itemAt(pos)]
+            print self.address_for_send_command
+            self.logMessage(self.address_for_send_command)
+
+            #self.logMessage(self.scene_view.items())
+
             win = ModalWind(self, parent=self)
             win.show()
         except KeyError:
