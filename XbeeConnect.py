@@ -141,7 +141,6 @@ class XbeeConnect(QtCore.QThread):
                 self.DestinationAddressHighInfo(data["parameter"].encode("hex"))
             elif command == "MY":
                 self.my_responce_dict = data["id"]
-                print self.my_responce_dict
             elif command == "DL":
                 self.DestinationAddressLowInfo(data["parameter"].encode("hex"))
             elif command == "SH":

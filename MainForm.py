@@ -70,13 +70,9 @@ class ModalWind(QtGui.QWidget):
         #TODO Проблема в том, на каком этапе сделать проверку и как, чтоб по нажатию на настройки определялялось по чему был клик в нашем случае либо координотор либо роутер
         #TODO что-то наподобие написал условие ниже
 
-        #if self.mainWindow.response_dict["device_type"] == "01":
-            #self.list_type_commands_mod.setCurrentIndex(1)
-
         self.send_remote_command_btn.clicked.connect(self.send_remote_btn_clicked)
 
     def send_remote_btn_clicked(self):
-
         self._type_command = self.list_type_commands_mod.currentText()
         _frame_id = self.mainWindow.coor.current_frame_id
         _dest_addr = self.remote_dest_add_edit.text()
@@ -86,6 +82,57 @@ class ModalWind(QtGui.QWidget):
             self.mainWindow.coor.sendATCommand(self._type_command, _frame_id, _command, _parameter)
         elif self._type_command == 'remote_at':
             self.mainWindow.coor.sendRemoteATCommand(self._type_command, _frame_id, _dest_addr, _command, _parameter)
+
+class StartModalWindow(QtGui.QWidget):
+    """Инициализация модального окна настроек подключения к модулю"""
+    def __init__(self, main_window, parent=None):
+        super(StartModalWindow, self).__init__(parent)
+        self.setWindowFlags(QtCore.Qt.Dialog | QtCore.Qt.WindowSystemMenuHint)
+        self.setWindowModality(QtCore.Qt.WindowModal)
+        self.setWindowTitle(u'Подключение')
+        self.resize(300, 300)
+        self.mainWindow = main_window
+        modal_grid_widget = QtGui.QWidget()
+        modal_layout = QtGui.QHBoxLayout(self)
+        self.modal_grid = QtGui.QGridLayout(modal_grid_widget)
+        modal_layout.addWidget(modal_grid_widget)
+        self.Tab_modal()
+    def Tab_modal(self):
+        self.TabModalWidget = QtGui.QTabWidget()
+        self.modal_grid.addWidget(self.TabModalWidget)
+        self.tab_open_port = QtGui.QWidget()
+        self.TabModalWidget.addTab(self.tab_open_port, u'Открыть порт')
+        self.TabOpenPort()
+    def TabOpenPort(self):
+        tab_open_port_layout = QtGui.QHBoxLayout(self.tab_open_port)
+        options_connect_mod = QtGui.QGroupBox(u'Настройки COM порта')
+        tab_open_port_layout.addWidget(options_connect_mod)
+        self.options_layout_mod = QtGui.QGridLayout(options_connect_mod)
+        self.parameters_()
+    def parameters_(self):
+        com_lbl_mod = QtGui.QLabel(u'COM порт')
+        com_list_mod = QtGui.QComboBox()
+        com_list_mod.setFixedWidth(80)
+        com_list_mod.addItems([str(x) for x in range(1, 20)])
+        com_list_mod.setCurrentIndex(3)
+        self.options_layout_mod.addWidget(com_list_mod, 1, 1)
+        speed_lbl_mod = QtGui.QLabel(u'Скорость передачи')
+        speed_list_mod = QtGui.QComboBox()
+        speed_list_mod.setFixedWidth(80)
+        speed_list_mod.addItems(["9600", "115200"])
+        self.options_layout_mod.addWidget(speed_list_mod, 2, 1)
+        self.connecting_btn_mod = QtGui.QPushButton(u"Ок")
+        self.connecting_btn_mod.setFixedWidth(90)
+        self.close_port_btn_mod = QtGui.QPushButton(u'Отмена')
+        self.close_port_btn_mod.setFixedWidth(90)
+        self.options_layout_mod.addWidget(self.close_port_btn_mod, 7, 1)
+        self.options_layout_mod.addWidget(self.connecting_btn_mod, 7, 0)
+        self.options_layout_mod.addWidget(com_lbl_mod, 1, 0)
+        self.options_layout_mod.addWidget(speed_lbl_mod, 2, 0)
+        com_lbl_mod.resize(500, com_lbl_mod.height())
+        self.connPrefFiels_mod = [com_list_mod, speed_list_mod]
+        self.connect(self.connecting_btn_mod, QtCore.SIGNAL("clicked()"),
+                     lambda fields=self.connPrefFiels_mod: self.mainWindow.readPrefs(fields))
 
 
 class AllCommandsListWidget(QtGui.QWidget):
@@ -132,6 +179,8 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.status_bar()
         self.all_tabs()
         self.graphics_scene_items = dict()
+        win_test = StartModalWindow(self)
+        win_test.show()
 
     "Инициализация основного таба и 3х вкладок(подключение, управление, структура сети)"
     def main_tab(self):
@@ -141,11 +190,11 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         """ Вкладка подключение """
         self.tab1 = QtGui.QWidget()
         """ Вкладка управление """
-        self.tab2 = QtGui.QWidget()
+        #self.tab2 = QtGui.QWidget()
         """ Вкладка построение сети """
         self.tab3 = QtGui.QWidget()
         self.tabWidget.addTab(self.tab1, u'Соединение')
-        self.tabWidget.addTab(self.tab2, u'Управление')
+        #self.tabWidget.addTab(self.tab2, u'Управление')
         self.tabWidget.addTab(self.tab3, u'Структура сети')
         self.grid = QtGui.QGridLayout()
         self.grid.setSpacing(10)
@@ -175,7 +224,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
     """ Все вкладки """
     def all_tabs(self):
         self.tab_connect()
-        self.tab_control()
+        #self.tab_control()
         self.tab_network_structure()
 
     """ Вкладка соединение """
@@ -367,6 +416,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.logWidget.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', "%Y-%m-%d %H:%M:%S"))
         logging.getLogger().addHandler(self.logWidget)
         logging.getLogger().setLevel(logging.DEBUG)
+
 
         """Сохранение логов в файл"""
         name_file_log = logging.FileHandler('test.log')
@@ -592,6 +642,8 @@ class QTextEditLogger(logging.Handler):
     def __init__(self, parent):
         logging.Handler.__init__(self)
         self.widget = QtGui.QTextEdit()
+        self.widget.setFixedHeight(200)
+        self.widget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.widget.setReadOnly(True)
 
     def emit(self, record):
