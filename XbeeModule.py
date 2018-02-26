@@ -7,6 +7,8 @@ class XbeeModule:
         self.type = None
         self.DL = None
         self.DH = None
+        self.firmware = None
+        self.directly_connected = None
 
     def set_property(self, prop, value):
         """функция для настройки модуля"""

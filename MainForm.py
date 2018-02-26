@@ -7,14 +7,15 @@ import XbeeCommands
 import random
 import json
 
-module_type_dict = {'20': 'ZigBee Coordinator AT',
-                    '21': 'ZigBee Coordinator API',
-                    '22': 'ZigBee Router AT',
-                    '23': 'ZigBee Router API',
-                    '26': 'ZigBee Router/End Device, Analog I/O Adapter',
-                    '27': 'ZigBee Router/End Device, Digital I/O Adapter',
-                    '28': 'ZigBee End Device AT',
-                    '29': 'ZigBee End Device API'}
+module_type_dict = {'20': {"description": 'S2B ZigBee Coordinator AT', "type": "00", "mode": "AT"},
+                    '21': {"description": 'S2B ZigBee Coordinator API', "type": "00", "mode": "API"},
+                    '22': {"description": 'S2B ZigBee Router AT', "type": "01", "mode": "AT"},
+                    '23': {"description": 'S2B ZigBee Router API', "type": "01", "mode": "API"},
+                    '26': 'S2B ZigBee Router/End Device, Analog I/O Adapter',
+                    '27': 'S2B ZigBee Router/End Device, Digital I/O Adapter',
+                    '28': 'S2B ZigBee End Device AT',
+                    '29': 'S2B ZigBee End Device API',
+                    '40': 'S2C Common Firmware'}
 commands = []
 commands_dict = {}
 for i in XbeeCommands.ALL_CLASSES:
@@ -88,7 +89,7 @@ class StartModalWindow(QtGui.QWidget):
     def __init__(self, main_window, parent=None):
         super(StartModalWindow, self).__init__(parent)
         self.setWindowFlags(QtCore.Qt.Dialog | QtCore.Qt.WindowSystemMenuHint)
-        self.setWindowModality(QtCore.Qt.WindowModal)
+        self.setWindowModality(QtCore.Qt.ApplicationModal)
         self.setWindowTitle(u'Подключение')
         self.resize(300, 300)
         self.mainWindow = main_window
@@ -179,8 +180,8 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.status_bar()
         self.all_tabs()
         self.graphics_scene_items = dict()
-        win_test = StartModalWindow(self)
-        win_test.show()
+        self.win_test = StartModalWindow(self)
+        self.win_test.show()
 
     "Инициализация основного таба и 3х вкладок(подключение, управление, структура сети)"
     def main_tab(self):
@@ -443,6 +444,8 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         firm_id = str(firmware[:2])
         if firm_id == '21':
             self.labelForIcon.setPixmap(self.conn_on_icon)
+        if firm_id == '40':
+            self.labelForIcon.setPixmap(self.conn_on_icon)
 
 
     """функция считавания значений и подключения модуля"""
@@ -453,7 +456,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
             self.connPrefs.append(item)
 
         # отправляем в поток параметры подключения
-        self.coor = XbeeConnect()
+        self.coor = XbeeConnect(self.win_test)
         self.coor.com = str("COM" + self.connPrefs[0])
         self.coor.speed = int(self.connPrefs[1])
         self.connect(self.coor, QtCore.SIGNAL('SendData(QString)'), self.logMessage, QtCore.Qt.QueuedConnection)
@@ -473,6 +476,7 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
                      self.sl_info_connecting_dev, QtCore.Qt.QueuedConnection)
         self.coor.start()
         self.connect(self.close_port_btn, QtCore.SIGNAL("clicked()"), self.close_port_info)
+        self.connect(self.coor, QtCore.SIGNAL('SendErrorConnect()'), self.error_connected, QtCore.Qt.QueuedConnection)
 
     "Функция закрытия com порта"
     def close_port_info(self):
@@ -481,6 +485,9 @@ class mainWindow(QtGui.QMainWindow, QtGui.QTreeView):
         self.info_sl_lbl.clear()
         self.info_sh_lbl.clear()
         self.scene.clear()
+
+    def error_connected(self):
+        QtGui.QMessageBox.warning(self, u"Внимание", u"Проверьте кооретность подключения модуля")
 
 
     def send_btn_clicked(self):

@@ -1,10 +1,11 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
 from xbee import XBee,ZigBee
+from PyQt4 import QtCore, QtGui
 import XbeeCommands
 import serial
+from serial import SerialException
 import time
-from PyQt4 import QtCore
 import json
 import logging
 """
@@ -27,7 +28,7 @@ for i in XbeeCommands.ALL_CLASSES:
 commands_dict = dict(zip(commands_short, commands))
 
 class XbeeConnect(QtCore.QThread):
-    def __init__(self):
+    def __init__(self, parent):
         QtCore.QThread.__init__(self)
         self.com = ''
         self.speed = ''
@@ -36,6 +37,7 @@ class XbeeConnect(QtCore.QThread):
         self.logger = None
         self.connected = False
         self.current_frame_id = []
+        self.parent_window = parent
 
     def sendDataToForm(self, data):
         self.emit(QtCore.SIGNAL('SendData(QString)'), data)
@@ -52,9 +54,8 @@ class XbeeConnect(QtCore.QThread):
         time.sleep(1)
         try:
             self.ser = serial.Serial(self.com, self.speed)
-        except Exception as ex:
-            self.sendDataToForm(ex.message)
-            return
+        except SerialException:
+            self.emit(QtCore.SIGNAL('SendErrorConnect()'))
         else:
             self.connected = True
             self.sendDataToForm("Connection to port {} was successful".format(self.com))
